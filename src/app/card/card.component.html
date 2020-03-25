@@ -1,0 +1,7 @@
+  <div class="{{display}}" [id]="value" cdkDrag
+     (cdkDragMoved)="onDragMoved($event)" (cdkDragReleased)="onDragRelease($event)"
+     [cdkDragDisabled]="!draggable"
+     [cdkDragFreeDragPosition]="dragPosition">
+  <img [src]="cardPath">
+  <!--<button (click)="changePosition()">Change element position</button>-->
+</div>

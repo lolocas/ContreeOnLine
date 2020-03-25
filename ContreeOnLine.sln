@@ -1,0 +1,40 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29905.134
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "ContreeOnLine", ".", "{5B59E254-6BED-4D8A-B1B6-9DD2AE19C767}"
+	ProjectSection(WebsiteProperties) = preProject
+		TargetFrameworkMoniker = ".NETFramework,Version%3Dv4.0"
+		Debug.AspNetCompiler.VirtualPath = "/localhost_51746"
+		Debug.AspNetCompiler.PhysicalPath = "..\ContreeOnLine\"
+		Debug.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_51746\"
+		Debug.AspNetCompiler.Updateable = "true"
+		Debug.AspNetCompiler.ForceOverwrite = "true"
+		Debug.AspNetCompiler.FixedNames = "false"
+		Debug.AspNetCompiler.Debug = "True"
+		Release.AspNetCompiler.VirtualPath = "/localhost_51746"
+		Release.AspNetCompiler.PhysicalPath = "..\ContreeOnLine\"
+		Release.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_51746\"
+		Release.AspNetCompiler.Updateable = "true"
+		Release.AspNetCompiler.ForceOverwrite = "true"
+		Release.AspNetCompiler.FixedNames = "false"
+		Release.AspNetCompiler.Debug = "False"
+		VWDPort = "51746"
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{5B59E254-6BED-4D8A-B1B6-9DD2AE19C767}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5B59E254-6BED-4D8A-B1B6-9DD2AE19C767}.Debug|Any CPU.Build.0 = Debug|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {C301C6CE-9D71-431A-B62C-64046C28B04D}
+	EndGlobalSection
+EndGlobal

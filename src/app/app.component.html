@@ -1,0 +1,90 @@
+<div class="container">
+
+  <canvas #cardTable width="640" height="480" style="border: 1px solid black"></canvas>
+
+  <div style="position: fixed;right: 0;left:{{posDepart.posX}}px;top:{{posDepart.posY}}px;">
+    <img src="../assets/cards/black_joker.png" />
+  </div>
+  <!--<div id="card">
+    <img src="../assets/Queen_OF_Hearts.png" />
+  </div>-->
+  <!--    <div>
+          <label for="country">Country:</label>
+          <input type="text" id="country" list="country_list">
+          <datalist id="country_list">
+            <option value="AF">Afghanistan</option>
+            <option value="AX">Åland Islands</option>
+            <option value="AL">Albania</option>
+            <option value="DZ">Algeria</option>
+    </datalist>
+  </div>-->
+  <!--<div style="position: fixed;right: 0;top: 0;left: 0;">
+    <div style="display: flex !important;align-items: center !important; align-items: center !important;">
+      <app-card *ngFor="let card of currentCards2" [value]=card display="card-normal"></app-card>
+    </div>
+    <div>{{nom2}}</div>
+  </div>-->
+
+  <div style="position: fixed;right: 0;top: 0;left: 0;">
+    <div style="justify-content: center!important;display: flex!important;">
+      <app-card *ngFor="let card of currentCards2" [value]=card display="card-draggable"></app-card>
+    </div>
+    <div style="justify-content: center!important;display: flex!important;">{{nom2}}</div>
+  </div>
+
+  <div style="top: 0;left: 0;bottom: 0;position: absolute;">
+    <div style="position: relative;top: 50%;transform: translateY(-50%);">
+      <app-card *ngFor="let card of currentCards3" [value]=card display="card-rotate"></app-card>
+    </div>
+  </div>
+
+  <div style="top: 0;left: 150px;bottom: 0;position: absolute;">
+    <div style="position: relative;top: 50%;transform: translateY(-50%);">{{nom3}}</div>
+  </div>
+
+  <div style="top: 0;right: 350px;bottom: 0;position: absolute;">
+    <div style="position: relative;top: 50%;transform: translateY(-50%);">{{nom4}}</div>
+  </div>
+  <div style="top: 0;right: 200px;bottom: 0;position: absolute;">
+    <div style="position: relative;top: 50%;transform: translateY(-50%);">
+      <app-card *ngFor="let card of currentCards4" [value]=card display="card-rotate"></app-card>
+    </div>
+  </div>
+
+  <div style="position: fixed;right: 0;bottom: 0;left: 0;">
+    <div style="justify-content: center!important;display: flex!important;">{{currentNom}}</div>
+    <div style="    justify-content: center !important;
+    display: flex !important;">
+      <app-card *ngFor="let card of currentCards" [value]=card display="card-draggable" [draggable]="positionJoueur=='sud'"></app-card>
+    </div>
+  </div>
+
+  <div style="top: 0;right: 0;bottom: 0;position:absolute;border:1px solid black;width:200px">
+    <div class="row" *ngFor="let mene of currentMenes"><p>{{mene.total1}}</p><p>&nbsp;</p><p>{{mene.total2}}</p></div>
+  </div>
+
+  <!--<div style="right: 0;bottom: 100px;position:fixed;">
+      <select name="encheres" id="enchere-select">
+        <option value="">--Selectionner une enchère--</option>
+        <option value="80">80</option>
+        <option value="90">90</option>
+        <option value="100">100</option>
+        <option value="110">110</option>
+        <option value="120">120</option>
+        <option value="130">130</option>
+        <option value="140">140</option>
+        <option value="150">150</option>
+        <option value="160">160</option>
+      </select>
+    <div>
+      <label for="country">Country:</label>
+      <input type="text" id="country" list="country_list">
+      <datalist id="country_list">
+        <option value="AF">Afghanistan</option>
+        <option value="AX">Åland Islands</option>
+        <option value="AL">Albania</option>
+        <option value="DZ">Algeria</option>
+    </datalist>
+  </div>
+  </div>-->
+</div>

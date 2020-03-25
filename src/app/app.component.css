@@ -1,0 +1,16 @@
+/*.align-items-center {
+  align-items: center !important;
+}
+
+.justify-content-center {
+  justify-content: center !important;
+}
+
+.d-flex {
+  display: flex !important;
+}
+
+.col-12 {
+  flex: 0 0 100%;
+  max-width: 100%;
+}*/
