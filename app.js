@@ -2,8 +2,10 @@ const Express = require("express")();
 const Http = require("http").Server(Express);
 const Socketio = require("socket.io")(Http);
 
-Http.listen(3000, () => {
-  console.log("Listening at :3000...");
+var PORT = process.env.PORT || 3000;
+
+Http.listen(PORT, () => {
+  console.log("Listening at :" + PORT +"...");
 });
 
 var nbTour = 4; //4
