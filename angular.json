@@ -63,7 +63,7 @@
         "serve": {
           "builder": "@angular-devkit/build-angular:dev-server",
           "options": {
-            //OUVERTURE HOCALHOST "host": "0.0.0.0",
+            //OUVERTURE LOCALHOST "host": "0.0.0.0",
             "browserTarget": "ContreeOnLine:build"
           },
           "configurations": {
