@@ -4,14 +4,6 @@ const Socketio = require("socket.io")(Http);
 
 var PORT = process.env.PORT || 3000;
 
-// Serve static files....
-app.use(express.static(__dirname + '/dist/ContreeOnLine'));
-
-// Send all requests to index.html
-app.get('/*', function (req, res) {
-  res.sendFile(path.join(__dirname + '/dist/ContreeOnLine/index.html'));
-});
-
 Http.listen(PORT, () => {
   console.log("Listening at :" + PORT +"...");
 });
