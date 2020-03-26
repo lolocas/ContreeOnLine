@@ -31,6 +31,8 @@ export class AppComponent implements OnInit {
   public couleur: string;
   @Input()
   public partanceId: number;
+  @Input()
+  public canAnnulerCarte: boolean;
 
   private ctxCardTable: CanvasRenderingContext2D;
   public socket: any;
@@ -44,6 +46,7 @@ export class AppComponent implements OnInit {
   public currentCards2: any;
   public currentCards3: any;
   public currentCards4: any;
+  private lastMene: Mene; //La dernière mène jouée entièrement
 
   public currentNom: string;
   public nom2: string;
@@ -84,6 +87,7 @@ export class AppComponent implements OnInit {
 
   public positionneJoueur() {
     this.positionJoueur = "sud";
+    this.canAnnulerCarte = false;
     //On démarre la mène
     if (this.currentContrat && this.currentContrat.menes[this.currentContrat.menes.length - 1].cards == undefined) {
       switch (this.currentParticipant.id) {
@@ -126,7 +130,7 @@ export class AppComponent implements OnInit {
         switch (this.currentParticipant.id) {
           case 1:
             switch (this.currentContrat.playerId) {
-              case 1: this.positionJoueur = "est"; break;
+              case 1: this.positionJoueur = "est"; this.canAnnulerCarte = true; break;
               case 2: this.positionJoueur = "ouest"; break;
               case 3: this.positionJoueur = "sud"; break;
               case 4: this.positionJoueur = "nord"; break;
@@ -135,7 +139,7 @@ export class AppComponent implements OnInit {
           case 2:
             switch (this.currentContrat.playerId) {
               case 1: this.positionJoueur = "ouest"; break;
-              case 2: this.positionJoueur = "est"; break;
+              case 2: this.positionJoueur = "est"; this.canAnnulerCarte = true; break;
               case 3: this.positionJoueur = "nord"; break;
               case 4: this.positionJoueur = "sud"; break;
             }
@@ -144,7 +148,7 @@ export class AppComponent implements OnInit {
             switch (this.currentContrat.playerId) {
               case 1: this.positionJoueur = "nord"; break;
               case 2: this.positionJoueur = "sud"; break;
-              case 3: this.positionJoueur = "est"; break;
+              case 3: this.positionJoueur = "est"; this.canAnnulerCarte = true; break;
               case 4: this.positionJoueur = "ouest"; break;
             }
             break;
@@ -153,7 +157,7 @@ export class AppComponent implements OnInit {
               case 1: this.positionJoueur = "sud"; break;
               case 2: this.positionJoueur = "nord"; break;
               case 3: this.positionJoueur = "ouest"; break;
-              case 4: this.positionJoueur = "est"; break;
+              case 4: this.positionJoueur = "est"; this.canAnnulerCarte = true; break;
             }
             break;
         }
@@ -267,6 +271,14 @@ export class AppComponent implements OnInit {
     return total;
   }
 
+  public onAnnulerCarte() {
+    var currentMene = this.currentContrat.menes[this.currentContrat.menes.length - 1];
+    var value = currentMene.cards[currentMene.cards.length - 1].value;
+    var cardToMove = this.cardList.toArray().find(item => item.value == value);
+    cardToMove.changePosition(0, 0);
+    this.socket.emit("annulerDerniereCarte", { value: value, id: this.currentParticipant.id });
+  }
+
   public onValidateEnchere() {
     if (!this.enchere || !this.couleur)
     {
@@ -275,12 +287,25 @@ export class AppComponent implements OnInit {
     }
     this.socket.emit("validateEnchere", { enchere: this.enchere + this.couleur });
   }
+
   public onValidatePartance() {
     if (!this.partanceId) {
       alert("Partance incomplète");
       return;
     }
     this.socket.emit("validatePartance", { id: Number(this.partanceId) });
+  }
+
+  public cardValueToImage(cardNumber: number): string {
+    if (this.lastMene && this.lastMene.cards && this.lastMene.cards.length == 4)
+      return Utils.cardValueToImage(this.lastMene.cards[cardNumber].value, '');
+    
+    return '../assets/pi.png';
+  }
+  public cardValueToName(cardNumber: number): string {
+    if (this.lastMene && this.lastMene.cards && this.lastMene.cards.length == 4)
+      return this.currentPartie.participants.find(item => item.id == this.lastMene.cards[cardNumber].id).nom;
+    return '';
   }
 
   public ngAfterViewInit() {
@@ -350,36 +375,37 @@ export class AppComponent implements OnInit {
     this.socket.on("cardPlayed", currentPartie => {
       this.currentPartie = currentPartie;
       this.currentContrat = this.currentPartie.contrats[currentPartie.contrats.length - 1];
-      var lastMene = this.currentContrat.menes[this.currentContrat.menes.length - 1];
+      var currentMene = this.currentContrat.menes[this.currentContrat.menes.length - 1];
 
       //Dernière carte de la mène
-      if (lastMene.cards == undefined) {
-        var lastMene = this.currentContrat.menes[this.currentContrat.menes.length - 2];
-
-        this.currentMenes.push(lastMene);
+      if (currentMene.cards == undefined) {
+        this.lastMene = this.currentContrat.menes[this.currentContrat.menes.length - 2];
+        var currentMene = this.lastMene;
+        this.currentMenes.push(currentMene);
 
         if (this.currentMenes.length == 8) { //Dernière carte du contrat on rajoute le 10 de der
           if (this.currentContrat.playerId == 1 || this.currentContrat.playerId == 2)
-            this.currentMenes.push(new Mene(10, 0));
+            this.currentMenes.push(new Mene(undefined, 10, 0));
           else
-            this.currentMenes.push(new Mene(0, 10));
+            this.currentMenes.push(new Mene(undefined, 0, 10));
         }
 
         Utils.sleep(2000).then(() => {
           for (var intTour = 0; intTour < this.currentPartie.nbTour; intTour++) {
-            if (this.currentCards && this.currentCards.indexOf(lastMene.cards[intTour].value) >= 0)
-              this.currentCards.splice(this.currentCards.indexOf(lastMene.cards[intTour].value), 1);
-            if (this.currentCards2 && this.currentCards2.indexOf(lastMene.cards[intTour].value) >= 0)
-              this.currentCards2.splice(this.currentCards2.indexOf(lastMene.cards[intTour].value), 1);
-            if (this.currentCards3 && this.currentCards3.indexOf(lastMene.cards[intTour].value) >= 0)
-              this.currentCards3.splice(this.currentCards3.indexOf(lastMene.cards[intTour].value), 1);
-            if (this.currentCards4 && this.currentCards4.indexOf(lastMene.cards[intTour].value) >= 0)
-              this.currentCards4.splice(this.currentCards4.indexOf(lastMene.cards[intTour].value), 1);
+            if (this.currentCards && this.currentCards.indexOf(currentMene.cards[intTour].value) >= 0)
+              this.currentCards.splice(this.currentCards.indexOf(currentMene.cards[intTour].value), 1);
+            if (this.currentCards2 && this.currentCards2.indexOf(currentMene.cards[intTour].value) >= 0)
+              this.currentCards2.splice(this.currentCards2.indexOf(currentMene.cards[intTour].value), 1);
+            if (this.currentCards3 && this.currentCards3.indexOf(currentMene.cards[intTour].value) >= 0)
+              this.currentCards3.splice(this.currentCards3.indexOf(currentMene.cards[intTour].value), 1);
+            if (this.currentCards4 && this.currentCards4.indexOf(currentMene.cards[intTour].value) >= 0)
+              this.currentCards4.splice(this.currentCards4.indexOf(currentMene.cards[intTour].value), 1);
           }
         });
       }
       this.positionneJoueur();
-      this.positionneCarte(lastMene.cards[lastMene.cards.length - 1].value)
+      if (this.currentParticipant.id != this.currentContrat.playerId)
+        this.positionneCarte(currentMene.cards[currentMene.cards.length - 1].value);
     });
 
     this.socket.on("addNom", currentPartie => {
@@ -547,6 +573,17 @@ export class AppComponent implements OnInit {
       }
       this.positionneJoueur();
     });
+
+    this.socket.on("onAnnulerDerniereCarte", infoDerniereCarte => {
+      this.currentPartie = infoDerniereCarte.currentPartie;
+      this.currentContrat = this.currentPartie.contrats[infoDerniereCarte.currentPartie.contrats.length - 1];
+
+      this.positionneJoueur();
+      if (infoDerniereCarte.value.id != this.currentParticipant.id) {
+        var cardToDrop = this.cardList.toArray().find(item => item.value == infoDerniereCarte.value.value);
+        cardToDrop.setInVisible();
+      }
+    })
 
     this.ctxCardTable = this.cardTableCanvas.nativeElement.getContext("2d");
     var img = new Image();

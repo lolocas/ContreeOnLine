@@ -102,6 +102,28 @@ Socketio.on("connection", socket => {
     currentPartie.contrats[currentPartie.contrats.length - 1].playerId = partance.id;
     Socketio.emit("onEnchereValidate", currentPartie);
   })
+  socket.on("annulerDerniereCarte", value => {
+    console.log("annulerDerniereCarte", value);
+    var newPlayerId = value.id;
+    var currentMene = currentPartie.contrats[currentPartie.contrats.length - 1].menes[currentPartie.contrats[currentPartie.contrats.length - 1].menes.length - 1];
+    //Annulation en début de mène on garde le même player
+    if (currentMene.cards.length == 1)
+      currentMene.cards == undefined;
+    else { //Annulation en cours de mène on recule le player d'un cran
+      currentMene.cards.splice(-1, 1);
+
+      if (value.id == 1)
+        newPlayerId = 3;
+      else if (value.id == 2)
+        newPlayerId = 4;
+      else if (value.id == 3)
+        newPlayerId = 2;
+      else if (value.id == 4)
+        newPlayerId = 1;
+    }
+    currentPartie.contrats[currentPartie.contrats.length - 1].playerId = newPlayerId;
+    Socketio.emit("onAnnulerDerniereCarte", { currentPartie: currentPartie, value: value });
+  })
 });
 
   function SortCards(cards) {

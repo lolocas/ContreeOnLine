@@ -1,6 +1,8 @@
 import { Component, OnInit, Input, Output, ElementRef, AfterViewInit } from '@angular/core';
 import { CdkDragStart, CdkDragMove, CdkDragExit, CdkDragEnter, CdkDragRelease, CdkDragEnd } from '@angular/cdk/drag-drop';
 import { AppComponent } from '../app.component';
+import { utils } from 'protractor';
+import { Utils } from '../Utils';
 
 @Component({
   selector: 'app-card',
@@ -8,7 +10,7 @@ import { AppComponent } from '../app.component';
   styleUrls: ['./card.component.css']
 })
 export class CardComponent implements AfterViewInit {
-  private imgPath: string = "/assets/cards/";
+  
   public cardPath: string;
   public cardName: string;
   public dragPosition = { x: 0, y: 0 };
@@ -29,10 +31,9 @@ export class CardComponent implements AfterViewInit {
 
   public ngAfterViewInit() {
     if (this.isInvisible)
-      this.cardPath = this.imgPath + "undefined_of_undefined" + (this.display == "card-rotate" ? "_rotate" : "") + ".png";
+      this.setInVisible();
     else
-      this.cardPath = this.imgPath + this.getFullRank() + "_of_" + this.getFullSuit() + (this.display == "card-rotate" ? "_rotate" : "") + ".png";
-    this.cardName = this.getFullRank() + "_of_" + this.getFullSuit();
+      this.cardPath = Utils.cardValueToImage(this.value, this.display);
   }
 
   public changePosition(posX:number, posY:number) {
@@ -45,41 +46,10 @@ export class CardComponent implements AfterViewInit {
   }
 
   public setVisible() {
-    this.cardPath = this.imgPath + this.getFullRank() + "_of_" + this.getFullSuit() + (this.display == "card-rotate" ? "_rotate" : "") + ".png";
+    this.cardPath = Utils.cardValueToImage(this.value, this.display);
   }
-
-  private getFullRank() {
-    if (this.value) {
-      switch (this.value.charAt(0)) {
-        case '0':
-          return "10";
-        case 'J':
-          return "jack";
-        case 'Q':
-          return "queen";
-        case 'K':
-          return "king";
-        case 'A':
-          return "ace";
-        default:
-          return this.value.charAt(0);
-      }
-    }
-  }
-
-  private getFullSuit() {
-    if (this.value) {
-      switch (this.value.charAt(1)) {
-        case 'H':
-          return "hearts";
-        case 'S':
-          return "spades";
-        case 'D':
-          return "diamonds";
-        case 'C':
-          return "clubs";
-      }
-    }
+  public setInVisible() {
+    this.cardPath = Utils.imgPath + "undefined_of_undefined" + (this.display == "card-rotate" ? "_rotate" : "") + ".png";
   }
 
   onDragMoved(e: CdkDragMove) {

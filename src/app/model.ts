@@ -14,7 +14,8 @@ export class Contrat {
 }
 
 export class Mene {
-  constructor(total1: number, total2: number) {
+  constructor(cards: MeneCard[], total1: number, total2: number) {
+    this.cards = cards;
     this.total1 = total1;
     this.total2 = total2;
   }
