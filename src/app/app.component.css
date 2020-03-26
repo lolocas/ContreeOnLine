@@ -14,3 +14,16 @@
   flex: 0 0 100%;
   max-width: 100%;
 }*/
+
+.sontour-sud {
+  transform: rotate(270deg);
+}
+.sontour-nord {
+  transform: rotate(90deg);
+}
+.sontour-est {
+  transform: rotate(180deg);
+}
+.sontour-ouest {
+  transform: rotate(0deg);
+}

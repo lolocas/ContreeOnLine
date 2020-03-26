@@ -14,6 +14,10 @@ export class Contrat {
 }
 
 export class Mene {
+  constructor(total1: number, total2: number) {
+    this.total1 = total1;
+    this.total2 = total2;
+  }
   public total1: number;
   public total2: number;
   public cards: MeneCard[];

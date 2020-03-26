@@ -1,7 +1,7 @@
   <div class="{{display}}" [id]="value" cdkDrag
-     (cdkDragMoved)="onDragMoved($event)" (cdkDragReleased)="onDragRelease($event)"
-     [cdkDragDisabled]="!draggable"
-     [cdkDragFreeDragPosition]="dragPosition">
+    (cdkDragMoved)="onDragMoved($event)" (cdkDragEnded)="onDragEnded($event)"
+    [cdkDragDisabled]="!draggable"
+    [cdkDragFreeDragPosition]="dragPosition"
+    [ngStyle]="{'opacity': (display != 'card-draggable' || draggable) ? '1' : '0.7' }">
   <img [src]="cardPath">
-  <!--<button (click)="changePosition()">Change element position</button>-->
 </div>

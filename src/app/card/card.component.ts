@@ -1,5 +1,5 @@
-import { Component, OnInit, Input, Output, EventEmitter, AfterViewInit } from '@angular/core';
-import { CdkDragStart, CdkDragMove, CdkDragExit, CdkDragEnter, CdkDragRelease } from '@angular/cdk/drag-drop';
+import { Component, OnInit, Input, Output, ElementRef, AfterViewInit } from '@angular/core';
+import { CdkDragStart, CdkDragMove, CdkDragExit, CdkDragEnter, CdkDragRelease, CdkDragEnd } from '@angular/cdk/drag-drop';
 import { AppComponent } from '../app.component';
 
 @Component({
@@ -16,25 +16,36 @@ export class CardComponent implements AfterViewInit {
   @Input()
   public value: string;
   @Input()
+  public id: number;
+  @Input()
   public display: string;
   @Input()
   public draggable: boolean;
+  @Input()
+  public isInvisible: boolean;
 
-  constructor(public myapp: AppComponent) {
+  constructor(public myapp: AppComponent, private elRef: ElementRef) {
   }
 
   public ngAfterViewInit() {
-    this.cardPath = this.imgPath + this.getFullRank() + "_of_" + this.getFullSuit() + (this.display =="card-rotate" ? "_rotate":"") + ".png";
+    if (this.isInvisible)
+      this.cardPath = this.imgPath + "undefined_of_undefined" + (this.display == "card-rotate" ? "_rotate" : "") + ".png";
+    else
+      this.cardPath = this.imgPath + this.getFullRank() + "_of_" + this.getFullSuit() + (this.display == "card-rotate" ? "_rotate" : "") + ".png";
     this.cardName = this.getFullRank() + "_of_" + this.getFullSuit();
-    //this.draggable = false;
-    //if (this.display == "card-draggable") {
-    //  this.draggable = true;
-    // // this.changePosition();
-    //}
   }
 
   public changePosition(posX:number, posY:number) {
     this.dragPosition = { x: posX, y: posY };
+  }
+
+  public changeAbsolutePosition(posX: number, posY: number) {
+    this.elRef.nativeElement.style.width = posX + "px";
+    this.elRef.nativeElement.style.height = posY + "px";
+  }
+
+  public setVisible() {
+    this.cardPath = this.imgPath + this.getFullRank() + "_of_" + this.getFullSuit() + (this.display == "card-rotate" ? "_rotate" : "") + ".png";
   }
 
   private getFullRank() {
@@ -73,16 +84,24 @@ export class CardComponent implements AfterViewInit {
 
   onDragMoved(e: CdkDragMove) {
     var newPos:any = {};
-    //newPos.left = (e.pointerPosition.x / window.innerWidth);
-    //newPos.top = (e.pointerPosition.y / window.innerHeight);
     newPos.left = (e.distance.x / window.innerWidth);
     newPos.top = (e.distance.y / window.innerHeight);
     newPos.value = this.value;
-    //console.log(e.pointerPosition.x, e.pointerPosition.y);
+    newPos.id = this.id;
+    //console.log(e.distance.x, e.distance.y);
     this.myapp.socket.emit("moveCard", newPos);
   }
 
-  onDragRelease(e: CdkDragRelease) {
+  onDragEnded(e: CdkDragEnd) {
+    //var newPos: any = {};
+    //const { offsetLeft, offsetTop } = e.source.element.nativeElement;
+    //const { x, y } = e.distance;
+    //var positionX = offsetLeft + x;
+    //var positionY = offsetTop + y;
+    //console.log({ positionX, positionY });
+    //newPos.left = Math.abs((positionX / window.innerWidth));
+    //newPos.top = Math.abs((positionY / window.innerHeight));
+    //newPos.value = this.value;
     this.myapp.socket.emit("cardDropped", this.value);
   }
 }

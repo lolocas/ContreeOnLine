@@ -1,0 +1,14 @@
+{
+  "projects": {
+    "default": "contreedujeudi"
+  },
+  "targets": {
+    "contreedujeudi": {
+      "hosting": {
+        "ContreeOnLine": [
+          "contreedujeudi"
+        ]
+      }
+    }
+  }
+}
