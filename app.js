@@ -17,8 +17,7 @@ var currentPartie = {
   participants: [],
   contrats: [{
     playerId:0,
-    valeur: '',
-    equipe: 0,
+    value: '',
     cards: [],
     menes: [{
       cards: [],
@@ -32,22 +31,6 @@ var currentPartie = {
 Socketio.on("connection", socket => {
   socket.on("addNom", nomInfo => {
     if (nomInfo.isAdmin) {
-      currentPartie = {
-        departId:0,
-        nbTour: nbTour,
-        participants: [],
-        contrats: [{
-          playerId: 1,
-          value:'',
-          equipe:1,
-          cards:[],
-          menes: [{
-            cards: undefined,
-            total1: 0,
-            total2:0
-          }]
-        }]
-      }; //TOREMOVE
       currentCards = cards.sort(function () { return 0.5 - Math.random() });
     }
     if (!currentPartie.participants.find(item => item.nom == nomInfo.nom)) {
@@ -71,16 +54,8 @@ Socketio.on("connection", socket => {
     var currentContrat = currentPartie.contrats[currentPartie.contrats.length - 1];
     if (currentContrat.menes[currentContrat.menes.length - 1].cards == undefined)
       currentContrat.menes[currentContrat.menes.length - 1].cards = [];
-    else {
-      if (currentContrat.playerId == 1)
-        currentContrat.playerId = 4;
-      else if (currentContrat.playerId == 2)
-        currentContrat.playerId = 3;
-      else if (currentContrat.playerId == 3)
-        currentContrat.playerId = 1;
-      else if (currentContrat.playerId == 4)
-        currentContrat.playerId = 2;
-    }
+    else
+      currentContrat.playerId = nextPlayer(currentContrat.playerId);
 
     currentContrat.menes[currentContrat.menes.length - 1].cards.push({ id: currentContrat.playerId, value: value });
 
@@ -108,23 +83,83 @@ Socketio.on("connection", socket => {
     var currentMene = currentPartie.contrats[currentPartie.contrats.length - 1].menes[currentPartie.contrats[currentPartie.contrats.length - 1].menes.length - 1];
     //Annulation en début de mène on garde le même player
     if (currentMene.cards.length == 1)
-      currentMene.cards == undefined;
+      currentMene.cards = undefined;
     else { //Annulation en cours de mène on recule le player d'un cran
       currentMene.cards.splice(-1, 1);
-
-      if (value.id == 1)
-        newPlayerId = 3;
-      else if (value.id == 2)
-        newPlayerId = 4;
-      else if (value.id == 3)
-        newPlayerId = 2;
-      else if (value.id == 4)
-        newPlayerId = 1;
+      newPlayerId = previousPlayer(value.id);
     }
     currentPartie.contrats[currentPartie.contrats.length - 1].playerId = newPlayerId;
     Socketio.emit("onAnnulerDerniereCarte", { currentPartie: currentPartie, value: value });
   })
+  socket.on("resetCurrentPartie", () => {
+    currentPartie = {
+      departId: 0,
+      nbTour: nbTour,
+      participants: [],
+      contrats: [{
+        playerId: 1,
+        value: '',
+        cards: [],
+        menes: [{
+          cards: undefined,
+          total1: 0,
+          total2: 0
+        }]
+      }]
+    };
+    Socketio.emit("addNom", currentPartie);
+  });
+  socket.on("resetCurrentContrat", () => {
+    currentPartie.contrats[currentPartie.contrats.length - 1].menes = [{
+      cards: undefined,
+      total1: 0,
+      total2: 0
+    }];
+    Socketio.emit("onNewContrat", currentPartie);
+  });
+  socket.on("newContrat", () => {
+    var newContrat = {
+      playerId: nextPlayer(currentPartie.contrats[currentPartie.contrats.length - 1].playerId),
+      value: '',
+      cards: [],
+      menes: [{
+        cards: undefined,
+        total1: 0,
+        total2: 0
+      }]
+    };
+
+    var sortedCards = cards.sort(function () { return 0.5 - Math.random() });
+    for (var numParticipant = 1; numParticipant <= 4; numParticipant++) {
+      newContrat.cards.push(SortCards(sortedCards.slice(0, 8)));
+      sortedCards = sortedCards.slice(8);
+    }   
+    currentPartie.contrats.push(newContrat);
+    Socketio.emit("onNewContrat", currentPartie);
+  });
 });
+
+function nextPlayer(currentPlayer) {
+  if (currentPlayer == 1)
+    return 4;
+  else if (currentPlayer == 2)
+    return 3;
+  else if (currentPlayer == 3)
+    return 1;
+  else if (currentPlayer == 4)
+    return 2;
+}
+
+function previousPlayer(currentPlayer) {
+  if (currentPlayer == 1)
+    return 3;
+  else if (currentPlayer == 2)
+    return 4;
+  else if (currentPlayer == 3)
+    return 2;
+  else if (currentPlayer == 4)
+    return 1;
+}
 
   function SortCards(cards) {
     return cards.sort((n1, n2) => {

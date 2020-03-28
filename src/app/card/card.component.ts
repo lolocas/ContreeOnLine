@@ -26,7 +26,7 @@ export class CardComponent implements AfterViewInit {
   @Input()
   public isInvisible: boolean;
 
-  constructor(public myapp: AppComponent, private elRef: ElementRef) {
+  constructor(public myapp: AppComponent, public elRef: ElementRef) {
   }
 
   public ngAfterViewInit() {

@@ -1,16 +1,19 @@
 export class Participant {
-  public nom: string;
-  public isAdmin: boolean;
-  public id: number;
-  public cards: Array<string> = [];
+  public nom: string; //Nom du participant
+  public isAdmin: boolean; //Est t'il administrateur
+  public id: number; //Identifiant
+  public cards: Array<string>; //Les cartes du participant
 }
 
 export class Contrat {
-  public playerId: number;
-  public value: string;
-  public equipe: number;
-  public menes: Mene[];
-  public cards: string[][];
+  constructor(t?: Contrat) {
+    Object.assign(this, t);
+  }
+
+  public playerId: number; //Joueur actuel
+  public value: string; //Valeur du contrat
+  public menes: Mene[]; //Les mènes
+  public cards: string[][]; //La liste des cartes par participant
 }
 
 export class Mene {
@@ -19,19 +22,19 @@ export class Mene {
     this.total1 = total1;
     this.total2 = total2;
   }
-  public total1: number;
-  public total2: number;
-  public cards: MeneCard[];
+  public cards: MeneCard[]; //Les cartes jouées de la mène
+  public total1: number; //Le total de l'équipe 1
+  public total2: number; //Le total de l'équipe 2
 }
 
 export class MeneCard {
-  public id: number;
-  public value: string;
+  public id: number;   //L'id du joueur de la carte
+  public value: string; //La valeur de la carte
 }
 
 export class Partie {
-  public departId: number;
-  public nbTour: number;
-  public participants: Array<Participant> = [];
-  public contrats: Array<Contrat> = [];
+  public departId: number; //L'id de celui qui a le départ
+  public nbTour: number; //Nombre de tour de cartes (4)
+  public participants: Array<Participant>; //La liste des participants
+  public contrats: Array<Contrat>; //La liste des contrats
 }
