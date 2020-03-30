@@ -20,7 +20,7 @@ var currentPartie = {
     value: '',
     cards: [],
     menes: [{
-      cards: [],
+      cards: undefined,
       total1: 0,
       total2: 0
     }]
