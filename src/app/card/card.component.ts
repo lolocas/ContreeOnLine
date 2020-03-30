@@ -9,7 +9,7 @@ import { Utils } from '../Utils';
   templateUrl: './card.component.html',
   styleUrls: ['./card.component.css']
 })
-export class CardComponent implements AfterViewInit {
+export class CardComponent {
   
   public cardPath: string;
   public cardName: string;
@@ -25,11 +25,13 @@ export class CardComponent implements AfterViewInit {
   public draggable: boolean;
   @Input()
   public isInvisible: boolean;
+  @Input()
+  public socket: any;
 
-  constructor(public myapp: AppComponent, public elRef: ElementRef) {
+  constructor(/*public myapp: AppComponent, */public elRef: ElementRef) {
   }
 
-  public ngAfterViewInit() {
+  public ngOnInit() {
     if (this.isInvisible)
       this.setInVisible();
     else
@@ -59,7 +61,7 @@ export class CardComponent implements AfterViewInit {
     newPos.value = this.value;
     newPos.id = this.id;
     //console.log(e.distance.x, e.distance.y);
-    this.myapp.socket.emit("moveCard", newPos);
+    this.socket.emit("moveCard", newPos);
   }
 
   onDragEnded(e: CdkDragEnd) {
@@ -72,6 +74,6 @@ export class CardComponent implements AfterViewInit {
     //newPos.left = Math.abs((positionX / window.innerWidth));
     //newPos.top = Math.abs((positionY / window.innerHeight));
     //newPos.value = this.value;
-    this.myapp.socket.emit("cardDropped", this.value);
+    this.socket.emit("cardDropped", this.value);
   }
 }

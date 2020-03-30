@@ -1,6 +1,6 @@
 const Express = require("express");
 const Http = require("http").Server(Express);
-const Socketio = require("socket.io")(Http);
+const Socketio = require("socket.io")(Http, { 'pingTimeout': 10000, 'pingInterval': 5000 });
 
 var PORT = process.env.PORT || 3000;
 
@@ -30,19 +30,7 @@ var currentPartie = {
 
 Socketio.on("connection", socket => {
   socket.on("addNom", nomInfo => {
-    if (nomInfo.isAdmin) {
-      currentCards = cards.sort(function () { return 0.5 - Math.random() });
-    }
-    if (!currentPartie.participants.find(item => item.nom == nomInfo.nom)) {
-      var participant = {
-        nom: nomInfo.nom,
-        id: currentPartie.participants.length + 1,
-        isAdmin:nomInfo.isAdmin
-      }
-      currentPartie.participants.push(participant);
-      currentPartie.contrats[currentPartie.contrats.length - 1].cards.push(SortCards(currentCards.slice(0, 8)));
-      currentCards = currentCards.slice(8);
-    }
+    addNom(nomInfo);
     console.log(currentPartie);
     Socketio.emit("addNom", currentPartie);
   })
@@ -91,7 +79,7 @@ Socketio.on("connection", socket => {
     currentPartie.contrats[currentPartie.contrats.length - 1].playerId = newPlayerId;
     Socketio.emit("onAnnulerDerniereCarte", { currentPartie: currentPartie, value: value });
   })
-  socket.on("resetCurrentPartie", () => {
+  socket.on("resetCurrentPartie", nomInfo => {
     currentPartie = {
       departId: 0,
       nbTour: nbTour,
@@ -107,7 +95,10 @@ Socketio.on("connection", socket => {
         }]
       }]
     };
-    Socketio.emit("addNom", currentPartie);
+
+    addNom(nomInfo);
+    console.log("newContrat");
+    Socketio.emit("onNewContrat", currentPartie);
   });
   socket.on("resetCurrentContrat", () => {
     currentPartie.contrats[currentPartie.contrats.length - 1].menes = [{
@@ -138,6 +129,22 @@ Socketio.on("connection", socket => {
     Socketio.emit("onNewContrat", currentPartie);
   });
 });
+
+function addNom(nomInfo) {
+  if (nomInfo.isAdmin) {
+    currentCards = cards.sort(function () { return 0.5 - Math.random() });
+  }
+  if (!currentPartie.participants.find(item => item.nom == nomInfo.nom)) {
+    var participant = {
+      nom: nomInfo.nom,
+      id: currentPartie.participants.length + 1,
+      isAdmin: nomInfo.isAdmin
+    }
+    currentPartie.participants.push(participant);
+    currentPartie.contrats[currentPartie.contrats.length - 1].cards.push(SortCards(currentCards.slice(0, 8)));
+    currentCards = currentCards.slice(8);
+  }
+}
 
 function nextPlayer(currentPlayer) {
   if (currentPlayer == 1)

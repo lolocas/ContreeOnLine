@@ -1,6 +1,5 @@
 <div class="container">
-
-  <canvas #cardTable width="640" height="480" style="border: 1px solid black"></canvas>
+  <!--<canvas #cardTable width="640" height="480" style="border: 1px solid black"></canvas>-->
   <div style="position: fixed;left:0px;top:0px;">
     <img src="{{cardValueToImage(0)}}" />
     <div class="infoSurImage" style="top:20px">{{cardValueToName(0)}}</div>
@@ -17,15 +16,15 @@
     <img src="{{cardValueToImage(3)}}" />
     <div class="infoSurImage" style="top:80px">{{cardValueToName(3)}}</div>
   </div>
-  <div style="position: fixed;left:{{posDepart.posX}}px;top:{{posDepart.posY}}px;">
+  <div style="position: fixed;left:{{posDepart.posX}};top:{{posDepart.posY}};">
     <img src="../assets/sontour.png" class="sontour-{{positionJoueur}}" />
   </div>
-  <div style="position: fixed;left:{{partance.posX}}px;top:{{partance.posY}}px;width: 90px;height: 90px;border-radius: 25px;background: lightsalmon;border:1px solid black;box-shadow: 5px 5px;">
+  <div style="position: fixed;left:{{partance.posX}}px;top:{{partance.posY}}px;width: 100px;height: 100px;border-radius: 25px;background: lightsalmon;border:1px solid black;box-shadow: 5px 5px;">
     <div class="infoSurImage" style="bottom:10px;right:10px">{{partance.valeur}}</div>
     <img src="../assets/{{partance.couleur}}.png" />
   </div>
 
-  <div style="position: fixed;right: 0;top: 0;left: 0;">
+  <div style="position: fixed;right: 0;top: 0;left: -200px;">
     <div style="justify-content: center!important;display: flex!important;">
       <app-card *ngFor="let card of currentCards2" [value]=card [id]="id2" display="card-normal" isInvisible="true"></app-card>
     </div>
@@ -54,13 +53,14 @@
     </div>
   </div>
 
-  <div style="position: fixed;right: 0;bottom: 0;left: 0;">
+  <div style="position: fixed;right: 0;bottom: 0;left: -200px;">
     <div style="justify-content: center!important;display: flex!important;font-weight: bold;">{{currentNom}}</div>
     <div style="justify-content: center !important; display: flex !important;">
-      <app-card *ngFor="let card of currentCards" [value]=card [id]="currentId" display="card-draggable" [draggable]="positionJoueur=='sud'"></app-card>
+      <app-card *ngFor="let card of currentCards" [value]=card [id]="currentId" [socket]="socket" display="card-draggable" [draggable]="positionJoueur=='sud'"></app-card>
     </div>
   </div>
   <button style="right: 250px;bottom: 30px;position: fixed;" (click)="onAnnulerCarte()" class="btn btn-info" [disabled]="!canAnnulerCarte">Annuler la carte</button>
+  <!-- Volet d'affichage -->
   <div style="top: 0;right: 0;bottom: 0;position:absolute;border:1px solid black;width:200px">
     <div style="display: flex">
       <div style="width:100px">Equipe 1</div>
@@ -74,47 +74,38 @@
       <div style="width:100px">Total: {{ getTotal1() }}</div>
       <div style="width:100px">Total: {{ getTotal2() }}</div>
     </div>
-    <div style="bottom:0;position:absolute;width:200px">
-      <div *ngIf="isAdmin">
-        <button style="" (click)="onResetPartie()" class="btn btn-danger btn-lg btn-block">Reset partie</button>
-        <button style="" (click)="onResetContrat()" class="btn btn-warning btn-lg btn-block">Reset contrat</button>
-        <button style="margin-bottom:100px" (click)="onNewContrat()" class="btn btn-success btn-lg btn-block">Nouveau contrat</button>
-        <div style="display:flex">
-          <label>Enchère:</label>
-          <select [(ngModel)]="enchere">
-            <option value=""></option>
-            <option value="80">80</option>
-            <option value="90">90</option>
-            <option value="100">100</option>
-            <option value="110">110</option>
-            <option value="120">120</option>
-            <option value="130">130</option>
-            <option value="140">140</option>
-            <option value="150">150</option>
-            <option value="160">160</option>
-          </select>
-        </div>
-        <div style="display:flex">
-    <label>Couleur:</label>
-    <select [(ngModel)]="couleur">
-      <option value=""></option>
-      <option value="H">Coeur</option>
-      <option value="S">Pique</option>
-      <option value="D">Carreau</option>
-      <option value="C">Trèfle</option>
-    </select>
-  </div>
-        <button (click)="onValidateEnchere()" class="btn btn-info">Valider Enchère</button>
-        <div style="display:flex">
-          <label>Partance:</label>
-          <select [(ngModel)]="partanceId">
-            <option value="1">1</option>
-            <option value="2">2</option>
-            <option value="3">3</option>
-            <option value="4">4</option>
-          </select>
-        </div>
-        <button (click)="onValidatePartance()" class="btn btn-info">Valider Partance</button>
+    <!--Volet d'administration-->
+    <div style="bottom:0;position:absolute;" *ngIf="isAdmin">
+      <button style="" (click)="onResetPartie()" class="btn btn-danger btn-lg btn-block">Reset partie</button>
+      <button style="" (click)="onResetContrat()" class="btn btn-warning btn-lg btn-block">Reset contrat</button>
+      <button style="margin-bottom:100px" (click)="onNewContrat()" class="btn btn-success btn-lg btn-block">Nouveau contrat</button>
+      <div>
+        <label for="spinner">Enchère:</label>
+        <input type="number" min="80" max="160" step="10" [(ngModel)]="enchere" (change)="onValidateEnchere()"/>
+      </div>
+      <label>
+        <input type="radio" name="radCouleur" value="H" [(ngModel)]="couleur" (change)="onValidateEnchere()">
+        <img src="../assets/coeur.png" width="49" height="50">
+      </label>
+      <label>
+        <input type="radio" name="radCouleur" value="S" [(ngModel)]="couleur" (change)="onValidateEnchere()">
+        <img src="../assets/pique.png" width="49" height="50">
+      </label>
+
+      <label>
+        <input type="radio" name="radCouleur" value="D" [(ngModel)]="couleur" (change)="onValidateEnchere()">
+        <img src="../assets/carreau.png" width="49" height="50">
+      </label>
+      <label>
+        <input type="radio" name="radCouleur" value="C" [(ngModel)]="couleur" (change)="onValidateEnchere()">
+        <img src="../assets/trefle.png" width="49" height="50">
+      </label>
+      <label>Partance</label>
+      <div id="divPartance" style="display:flex;">
+        <label><input type="radio" name="optPartance" value="1" [(ngModel)]="partanceId" (change)="onValidatePartance()"><span>{{currentNom}}</span></label>
+        <label><input type="radio" name="optPartance" value="2" [(ngModel)]="partanceId" (change)="onValidatePartance()"><span>{{nom2}}</span></label>
+        <label><input type="radio" name="optPartance" value="3" [(ngModel)]="partanceId" (change)="onValidatePartance()"><span>{{nom3}}</span></label>
+        <label><input type="radio" name="optPartance" value="4" [(ngModel)]="partanceId" (change)="onValidatePartance()"><span>{{nom4}}</span></label>
       </div>
     </div>
   </div>

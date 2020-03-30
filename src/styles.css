@@ -1,6 +1,8 @@
-.infoSurImage {
-  z-index: 10;
-  position: absolute;
-  font-weight: bold;
-  background-color:white;
+body {
+  background-image: url("./assets/Card_Table.png");
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  background-position: calc(50% - 100px) center;
+  background-size: 70% 50%;
+  background-color:azure;
 }

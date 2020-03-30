@@ -4,6 +4,7 @@ import io from "socket.io-client";
 import { CardComponent } from './card/card.component';
 import { Participant, Partie, Mene, Contrat } from './model';
 import { Utils } from './Utils';
+import { environment } from 'src/environments/environment';
 
 @Component({
     selector: 'app-root',
@@ -20,13 +21,13 @@ export class AppComponent implements OnInit {
   private cardList: QueryList<CardComponent>;
 
   @Input()
-  public posDepart: { posX: number, posY: number } = { posX: 0, posY: 0 };
+  public posDepart: { posX: string, posY: string } = { posX: '', posY: '' };
   @Output()
   public positionJoueur: string;
   @Input()
   public partance: { posX: number, posY: number, couleur: string, valeur: string } = { posX: 0, posY: 0, couleur: 'pi', valeur: "0" };
   @Input()
-  public enchere: string;
+  public enchere: number = 80;
   @Input()
   public couleur: string;
   @Input()
@@ -34,7 +35,7 @@ export class AppComponent implements OnInit {
   @Input()
   public canAnnulerCarte: boolean;
 
-  private ctxCardTable: CanvasRenderingContext2D;
+  @Output()
   public socket: any;
   @Output()
   public isAdmin: boolean = false;
@@ -63,8 +64,11 @@ export class AppComponent implements OnInit {
   }
 
   public ngOnInit() {
-    this.socket = io("http://localhost:3000");
+
+    environment.production
+    //this.socket = io("http://localhost:3000");
     //this.socket = io("https://contreeonline.herokuapp.com/");
+    this.socket = io(environment.socketIoUrl);
     this.activatedRoute.queryParams.subscribe(params => {
       if (params['nom']) {
         if (params['admin'])
@@ -74,15 +78,6 @@ export class AppComponent implements OnInit {
         this.socket.emit('addNom', { nom: this.currentNom, isAdmin: this.isAdmin });
       }
     });
-  }
-
-  paint(ctx, img) {
-
-    ctx.drawImage(img, 0, 0, 640, 480);
-
-    setTimeout(() => {
-      this.paint(ctx, img);
-    }, 300);
   }
 
   public positionneJoueur() {
@@ -163,94 +158,104 @@ export class AppComponent implements OnInit {
         }
       }
     }
-    if (this.ctxCardTable) {
-    this.posDepart.posX = 0;
-    this.posDepart.posY = 0;
-      switch (this.positionJoueur) {
-        case "sud":
-          this.posDepart.posX = this.ctxCardTable.canvas.offsetLeft + (this.ctxCardTable.canvas.width / 2);
-          this.posDepart.posY = this.ctxCardTable.canvas.offsetTop + this.ctxCardTable.canvas.height;
-          break;
-        case "nord":
-          this.posDepart.posX = this.ctxCardTable.canvas.offsetLeft + (this.ctxCardTable.canvas.width / 2);
-          this.posDepart.posY = this.ctxCardTable.canvas.offsetTop;
-          break;
-        case "ouest":
-          this.posDepart.posX = this.ctxCardTable.canvas.offsetLeft;
-          this.posDepart.posY = this.ctxCardTable.canvas.offsetTop + (this.ctxCardTable.canvas.height / 2);
-          break;
-        case "est":
-          this.posDepart.posX = this.ctxCardTable.canvas.offsetLeft + this.ctxCardTable.canvas.width;
-          this.posDepart.posY = this.ctxCardTable.canvas.offsetTop + (this.ctxCardTable.canvas.height / 2);
-          break;
-      }
+    this.posDepart.posX = '';
+    this.posDepart.posY = '';
+    switch (this.positionJoueur) {
+      case "sud":
+        this.posDepart.posX = "calc(50% - 164px)";
+        this.posDepart.posY = (window.innerHeight * 0.75) - 150 + 'px';
+        break;
+      case "nord":
+        this.posDepart.posX = "calc(50% - 164px)";
+        this.posDepart.posY = (window.innerHeight * 0.25) + 'px';
+        break;
+      case "ouest":
+        this.posDepart.posX = (window.innerWidth * 0.20) - 100 + 'px';
+        this.posDepart.posY = "calc(50% - 46px)";
+        break;
+      case "est":
+        this.posDepart.posX = (window.innerWidth * 0.70) + 'px';
+        this.posDepart.posY = "calc(50% - 46px)";
+        break;
     }
   }
 
-  public positionneCarte(card: CardComponent, zIndex:number) {
-    //var positionCard = "sud";
-    //var posX;
-    //var posY;
-    //switch (this.currentParticipant.id) {
-    //  case 1:
-    //    switch (this.currentContrat.playerId) {
-    //      case 1: positionCard = "sud"; break;
-    //      case 2: positionCard = "nord"; break;
-    //      case 3: positionCard = "ouest"; break;
-    //      case 4: positionCard = "est"; break;
-    //    }
-    //    break;
-    //  case 2:
-    //    switch (this.currentContrat.playerId) {
-    //      case 1: positionCard = "nord"; break;
-    //      case 2: positionCard = "sud"; break;
-    //      case 3: positionCard = "est"; break;
-    //      case 4: positionCard = "ouest"; break;
-    //    }
-    //    break;
-    //  case 3:
-    //    switch (this.currentContrat.playerId) {
-    //      case 1: positionCard = "est"; break;
-    //      case 2: positionCard = "ouest"; break;
-    //      case 3: positionCard = "sud"; break;
-    //      case 4: positionCard = "nord"; break;
-    //    }
-    //    break;
-    //  case 4:
-    //    switch (this.currentContrat.playerId) {
-    //      case 1: positionCard = "ouest"; break;
-    //      case 2: positionCard = "est"; break;
-    //      case 3: positionCard = "nord"; break;
-    //      case 4: positionCard = "sud"; break;
-    //    }
-    //    break;
-    //}
-    //switch (positionCard) {
-    //  case "sud":
-    //    posX = this.ctxCardTable.canvas.offsetLeft + (this.ctxCardTable.canvas.width / 2);
-    //    posY = this.ctxCardTable.canvas.offsetTop + this.ctxCardTable.canvas.height;
-    //    break;
-    //  case "nord":
-    //    posX = this.ctxCardTable.canvas.offsetLeft + (this.ctxCardTable.canvas.width / 2);
-    //    posY = this.ctxCardTable.canvas.offsetTop;
-    //    break;
-    //  case "ouest":
-    //    posX = this.ctxCardTable.canvas.offsetLeft;
-    //    posY = this.ctxCardTable.canvas.offsetTop + (this.ctxCardTable.canvas.height / 2);
-    //    break;
-    //  case "est":
-    //    posX = -((window.innerWidth / 2)-620); //Canvas/2 - panel
-    //    posY = 0;
-    //    break;
-    //}
-    //var element = document.getElementById(value);
-    //element.style.position = "fixed";
-    //element.style.transform = null;
-    //element.style.right = '0px';
-    //element.style.bottom = '0px';
-    //element.style.left = posX + 'px';
-    //element.style.top = posY + 'px';
+  public positionneCarte(value:string) {
+    var positionCard = "sud";
+    var posX;
+    var posY;
+    switch (this.currentParticipant.id) {
+      case 1:
+        switch (this.currentContrat.playerId) {
+          case 1: positionCard = "sud"; break;
+          case 2: positionCard = "nord"; break;
+          case 3: positionCard = "ouest"; break;
+          case 4: positionCard = "est"; break;
+        }
+        break;
+      case 2:
+        switch (this.currentContrat.playerId) {
+          case 1: positionCard = "nord"; break;
+          case 2: positionCard = "sud"; break;
+          case 3: positionCard = "est"; break;
+          case 4: positionCard = "ouest"; break;
+        }
+        break;
+      case 3:
+        switch (this.currentContrat.playerId) {
+          case 1: positionCard = "est"; break;
+          case 2: positionCard = "ouest"; break;
+          case 3: positionCard = "sud"; break;
+          case 4: positionCard = "nord"; break;
+        }
+        break;
+      case 4:
+        switch (this.currentContrat.playerId) {
+          case 1: positionCard = "ouest"; break;
+          case 2: positionCard = "est"; break;
+          case 3: positionCard = "nord"; break;
+          case 4: positionCard = "sud"; break;
+        }
+        break;
+    }
 
+    //Position à atteindre
+    posX = 0;
+    posY = 0;
+    switch (positionCard) {
+      case "sud":
+        posX = (window.innerWidth / 2);
+        posY = (window.innerHeight * 0.75) - 300;
+        break;
+      case "nord":
+        posX = (window.innerWidth / 2) - 150;
+        posY = (window.innerHeight * 0.25);
+        break;
+      case "ouest":
+        posX = (window.innerWidth * 0.20) - 100;
+        posY = (window.innerHeight / 2) - 50;
+        break;
+      case "est":
+        posX = (window.innerWidth * 0.70);
+        posY = (window.innerHeight / 2) - 50;
+        break;
+    }
+    var cardElt = document.getElementById(value);
+    var cardStyle = window.getComputedStyle(cardElt);
+
+    var transformValue = new WebKitCSSMatrix(cardStyle.transform);
+
+    var rect = cardElt.getBoundingClientRect();
+
+    //Position actuelle en absolue
+    var posAbsX = rect.x;
+    var posAbsY = rect.y;
+
+    //Différence entre la position actuelle et la position à atteindre
+    var transX = transformValue.e - (posAbsX - posX);
+    var transY = transformValue.f - (posAbsY - posY);
+
+    cardElt.style.transform = "translate3d(" + Math.trunc(transX) + "px, " + Math.trunc(transY) + "px, 0px)";
   }
 
   public positionnePartance() {
@@ -291,39 +296,39 @@ export class AppComponent implements OnInit {
     }
     switch (positionPartance) {
       case "sud":
-        this.partance.posX = this.ctxCardTable.canvas.offsetLeft + (this.ctxCardTable.canvas.width / 2) - 200;
-        this.partance.posY = this.ctxCardTable.canvas.offsetTop + this.ctxCardTable.canvas.height;
+        this.partance.posX = (window.innerWidth * 0.25) - 100;
+        this.partance.posY = (window.innerHeight * 0.75) - 150;
         break;
       case "nord":
-        this.partance.posX = this.ctxCardTable.canvas.offsetLeft + (this.ctxCardTable.canvas.width / 2) + 200;
-        this.partance.posY = this.ctxCardTable.canvas.offsetTop;
+        this.partance.posX = (window.innerWidth * 0.75) - 300;
+        this.partance.posY = (window.innerHeight * 0.25);
         break;
       case "ouest":
-        this.partance.posX = this.ctxCardTable.canvas.offsetLeft;
-        this.partance.posY = this.ctxCardTable.canvas.offsetTop + (this.ctxCardTable.canvas.height / 2) - 100;
+        this.partance.posX = (window.innerWidth * 0.20) - 100;
+        this.partance.posY = (window.innerHeight * 0.5) - 200;
         break;
       case "est":
-        this.partance.posX = this.ctxCardTable.canvas.offsetLeft + this.ctxCardTable.canvas.width;
-        this.partance.posY = this.ctxCardTable.canvas.offsetTop + (this.ctxCardTable.canvas.height / 2) + 100;
+        this.partance.posX = (window.innerWidth * 0.70);
+        this.partance.posY = (window.innerHeight * 0.5) + 50;
         break;
     }
     this.partance.valeur = this.currentContrat.value.substr(0, this.currentContrat.value.length - 1);
     var couleur = this.currentContrat.value[this.currentContrat.value.length - 1];
-    switch (couleur) {
-      case "H":
-        this.partance.couleur = "coeur";
-        break;
-      case "S":
-        this.partance.couleur = "pique";
-        break;
-      case "C":
-        this.partance.couleur = "trefle";
-        break;
-      case "D":
-        this.partance.couleur = "carreau";
-        break;
-    }
+  switch (couleur) {
+    case "H":
+      this.partance.couleur = "coeur";
+      break;
+    case "S":
+      this.partance.couleur = "pique";
+      break;
+    case "C":
+      this.partance.couleur = "trefle";
+      break;
+    case "D":
+      this.partance.couleur = "carreau";
+      break;
   }
+}
 
   public getTotal1() {
     var total = 0;
@@ -344,40 +349,36 @@ export class AppComponent implements OnInit {
   public onAnnulerCarte() {
     var currentMene = this.currentContrat.menes[this.currentContrat.menes.length - 1];
     var value = currentMene.cards[currentMene.cards.length - 1].value;
-    var cardToMove = this.cardList.toArray().find(item => item.value == value);
-    cardToMove.changePosition(0, 0);
     this.socket.emit("annulerDerniereCarte", { value: value, id: this.currentParticipant.id });
   }
 
   public onResetPartie() {
     if (confirm('Confirmez-vous le reset de la partie ?')) {
-      this.socket.emit("resetCurrentPartie");
+      this.nom2 = '';
+      this.nom3 = '';
+      this.nom4 = '';
+      this.partanceId = 1;
+      this.socket.emit("resetCurrentPartie", { nom: this.currentNom, isAdmin: this.isAdmin });
     }
   }
+
   public onResetContrat() {
     if (confirm('Confirmez-vous le reset du contrat ?')) {
       this.socket.emit("resetCurrentContrat");
     }
   }
+
   public onNewContrat() {
     if (confirm('Confirmez-vous la création d\'un nouveau contrat ?')) {
       this.socket.emit("newContrat");
     }
   }
+
   public onValidateEnchere() {
-    if (!this.enchere || !this.couleur)
-    {
-      alert("Enchère incomplète");
-      return;
-    }
     this.socket.emit("validateEnchere", { enchere: this.enchere + this.couleur });
   }
 
   public onValidatePartance() {
-    if (!this.partanceId) {
-      alert("Partance incomplète");
-      return;
-    }
     this.socket.emit("validatePartance", { id: Number(this.partanceId) });
   }
 
@@ -387,6 +388,7 @@ export class AppComponent implements OnInit {
     
     return '../assets/pi.png';
   }
+
   public cardValueToName(cardNumber: number): string {
     if (this.lastMene && this.lastMene.cards && this.lastMene.cards.length == 4)
       return this.currentPartie.participants.find(item => item.id == this.lastMene.cards[cardNumber].id).nom;
@@ -489,13 +491,12 @@ export class AppComponent implements OnInit {
         });
       }
       this.positionneJoueur();
-      var cardToDrop = this.cardList.toArray().find(item => item.value == currentMene.cards[currentMene.cards.length - 1].value);
+
       if (this.currentParticipant.id != this.currentContrat.playerId) {
-        cardToDrop.elRef.nativeElement.style.zIndex = currentMene.cards.length;
+        this.positionneCarte(currentMene.cards[currentMene.cards.length - 1].value)
+        var cardToDrop = this.cardList.toArray().find(item => item.value == currentMene.cards[currentMene.cards.length - 1].value);
         cardToDrop.setVisible();
       }
-      else
-        cardToDrop.elRef.nativeElement.style.opacity = 1;
     });
 
     this.socket.on("addNom", currentPartie => {
@@ -597,6 +598,10 @@ export class AppComponent implements OnInit {
       this.currentCards4 = [];
 
       this.currentMenes = [];
+      this.lastMene = null;
+      this.partance = { posX: 0, posY: 0, couleur: 'pi', valeur: "0" };
+      this.couleur = '';
+      this.enchere = 80;
       this.currentPartie = currentPartie;
       this.currentContrat = this.currentPartie.contrats[this.currentPartie.contrats.length - 1];
 
@@ -639,19 +644,12 @@ export class AppComponent implements OnInit {
     this.socket.on("onAnnulerDerniereCarte", infoDerniereCarte => {
       this.currentPartie = infoDerniereCarte.currentPartie;
       this.currentContrat = this.currentPartie.contrats[infoDerniereCarte.currentPartie.contrats.length - 1];
-
+      var cardToMove = this.cardList.toArray().find(item => item.value == infoDerniereCarte.value.value);
+      cardToMove.changePosition(0, 0);
       this.positionneJoueur();
       if (infoDerniereCarte.value.id != this.currentParticipant.id) {
-        var cardToDrop = this.cardList.toArray().find(item => item.value == infoDerniereCarte.value.value);
-        cardToDrop.setInVisible();
+        cardToMove.setInVisible();
       }
     })
-
-    this.ctxCardTable = this.cardTableCanvas.nativeElement.getContext("2d");
-    var img = new Image();
-    img.src = '../assets/Card_Table.png';
-    this.paint(this.ctxCardTable, img);
-
-   
   }
 }
