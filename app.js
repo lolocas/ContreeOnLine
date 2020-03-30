@@ -16,7 +16,7 @@ var currentPartie = {
   nbTour: nbTour,
   participants: [],
   contrats: [{
-    playerId:0,
+    playerId: 1,
     value: '',
     cards: [],
     menes: [{
