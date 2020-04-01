@@ -25,7 +25,7 @@ export class AppComponent implements OnInit {
   @Output()
   public positionJoueur: string;
   @Input()
-  public partance: { posX: number, posY: number, couleur: string, valeur: string } = { posX: 0, posY: 0, couleur: 'pi', valeur: "0" };
+  public partance: { posX: number, posY: number, couleur: string, valeur: string } = { posX: 0, posY: 0, couleur: '', valeur: "0" };
   @Input()
   public enchere: number = 80;
   @Input()
@@ -382,6 +382,47 @@ export class AppComponent implements OnInit {
     this.socket.emit("validatePartance", { id: Number(this.partanceId) });
   }
 
+  public rotationCard(index: number, position: string): any {
+    if (position == "sud") {
+      index = index + Math.trunc((8 - this.currentCards.length) / 2);
+      if (index == 0)
+        return { transform: 'rotate(-12deg) translate3d(70px, 28px, 0px)' };
+      if (index == 1)
+        return { transform: 'rotate(-9deg) translate3d(50px, 5px, 0px)' };
+      if (index == 2)
+        return { transform: 'rotate(-6deg) translate3d(30px, -10px, 0px)' };
+      if (index == 3)
+        return { transform: 'rotate(-3deg) translate3d(10px, -20px, 0px)' };
+      if (index == 4)
+        return { transform: 'rotate(3deg) translate3d(-10px, -20px, 0px)' };
+      if (index == 5)
+        return { transform: 'rotate(6deg) translate3d(-30px, -10px, 0px)' };
+      if (index == 6)
+        return { transform: 'rotate(9deg) translate3d(-50px, 5px, 0px)' };
+      if (index == 7)
+        return { transform: 'rotate(12deg) translate3d(-70px, 28px, 0px)' };
+    }
+    else if (position == "nord") {
+      index = index + Math.trunc((8 - this.currentCards2.length) / 2);
+      if (index == 0)
+        return { transform: 'rotate(12deg) translate3d(70px, -28px, 0px)' };
+      if (index == 1)
+        return { transform: 'rotate(9deg) translate3d(50px, -5px, 0px)' };
+      if (index == 2)
+        return { transform: 'rotate(6deg) translate3d(30px, 10px, 0px)' };
+      if (index == 3)
+        return { transform: 'rotate(3deg) translate3d(10px, 20px, 0px)' };
+      if (index == 4)
+        return { transform: 'rotate(-3deg) translate3d(-10px, 20px, 0px)' };
+      if (index == 5)
+        return { transform: 'rotate(-6deg) translate3d(-30px, 10px, 0px)' };
+      if (index == 6)
+        return { transform: 'rotate(-9deg) translate3d(-50px, -5px, 0px)' };
+      if (index == 7)
+        return { transform: 'rotate(-12deg) translate3d(-70px, -28px, 0px)' };
+    }
+  }
+
   public cardValueToImage(cardNumber: number): string {
     if (this.lastMene && this.lastMene.cards && this.lastMene.cards.length == 4)
       return Utils.cardValueToImage(this.lastMene.cards[cardNumber].value, '');
@@ -511,82 +552,42 @@ export class AppComponent implements OnInit {
       }
       this.positionneJoueur();
 
-      //Dernier connecté
-      var currentConnected:Participant = this.currentPartie.participants[this.currentPartie.participants.length - 1];
-      var currentConnectedContrat = this.currentPartie.contrats[this.currentPartie.contrats.length - 1];
-      var currentConnectedCards = currentConnectedContrat.cards[currentConnected.id - 1];
+      var index2: number = 0;
+      var index3: number = 0;
+      var index4: number = 0;
 
       if (this.currentParticipant) {
-        //Le deuxième participant se connecte
-        if ((currentConnected.id == 2)) {
-          //On affiche pour le premier
-          if (this.currentParticipant.id == 1) {
-            this.nom2 = currentConnected.nom;
-            this.id2 = currentConnected.id;
-            this.currentCards2 = currentConnectedCards;
-          }
-          else {
-            //on affiche les cartes du premier participant
-            this.nom2 = this.currentPartie.participants.find(item => item.id == 1).nom;
-            this.id2 = this.currentPartie.participants.find(item => item.id == 1).id;
-            this.currentCards2 = currentConnectedContrat.cards[0];
-          }
+        switch (this.currentParticipant.id) {
+          case 1:
+            index2 = 1;
+            index3 = 2;
+            index4 = 3;
+            break;
+          case 2:
+            index2 = 0;
+            index3 = 3;
+            index4 = 2;
+            break;
+          case 3:
+            index2 = 3;
+            index3 = 1;
+            index4 = 0;
+            break;
+          case 4:
+            index2 = 2;
+            index3 = 0;
+            index4 = 1;
+            break;
         }
-        //Le troisième participant se connecte
-        else if ((currentConnected.id == 3)) {
-          //on affiche les cartes au premier et deuxième participant
-          if (this.currentParticipant.id == 1) {
-            this.nom3 = currentConnected.nom;
-            this.id3 = currentConnected.id;
-            this.currentCards3 = currentConnectedCards;
-          }
-          else if (this.currentParticipant.id == 2) {
-            this.nom4 = currentConnected.nom;
-            this.id4 = currentConnected.id;
-            this.currentCards4 = currentConnectedCards;
-          }
-          else {
-            //on affiche les cartes du premier et deuxième participant
-            this.nom3 = this.currentPartie.participants.find(item => item.id == 2).nom;
-            this.id3 = this.currentPartie.participants.find(item => item.id == 2).id;
-            this.currentCards3 = currentConnectedContrat.cards[1];
-            this.nom4 = this.currentPartie.participants.find(item => item.id == 1).nom;
-            this.id4 = this.currentPartie.participants.find(item => item.id == 1).id;
-            this.currentCards4 = currentConnectedContrat.cards[0];
-          }
-        }
-        //Le quatrième participant se connecte
-        else if ((currentConnected.id == 4)) {
-          //on affiche les cartes au premier et deuxième participant
-          if (this.currentParticipant.id == 1) {
-            this.nom4 = currentConnected.nom;
-            this.id4 = currentConnected.id;
-            this.currentCards4 = currentConnectedCards;
-          }
-          else if (this.currentParticipant.id == 2) {
-            this.nom3 = currentConnected.nom;
-            this.id3 = currentConnected.id;
-            this.currentCards3 = currentConnectedCards;
-          }
-          //on affiche les cartes au troisième
-          else if (this.currentParticipant.id == 3) {
-            this.nom2 = currentConnected.nom;
-            this.id2 = currentConnected.id;
-            this.currentCards2 = currentConnectedCards;
-          }
-          else {
-            //on affiche les cartes du premier, deuxième et troisième participant
-            this.nom3 = this.currentPartie.participants.find(item => item.id == 1).nom;
-            this.id3 = this.currentPartie.participants.find(item => item.id == 1).id;
-            this.currentCards3 = currentConnectedContrat.cards[0];
-            this.nom4 = this.currentPartie.participants.find(item => item.id == 2).nom;
-            this.id4 = this.currentPartie.participants.find(item => item.id == 2).id;
-            this.currentCards4 = currentConnectedContrat.cards[1];
-            this.nom2 = this.currentPartie.participants.find(item => item.id == 3).nom;
-            this.id2 = this.currentPartie.participants.find(item => item.id == 3).id;
-            this.currentCards2 = currentConnectedContrat.cards[2];
-          }
-        }
+        this.currentCards2 = this.currentContrat.cards[index2];
+        this.nom2 = this.currentPartie.participants[index2].nom;
+        this.id2 = this.currentPartie.participants[index2].id;
+        this.currentCards3 = this.currentContrat.cards[index3];
+        this.nom3 = this.currentPartie.participants[index3].nom;
+        this.id3 = this.currentPartie.participants[index3].id;
+        this.currentCards4 = this.currentContrat.cards[index4];
+        this.nom4 = this.currentPartie.participants[index4].nom;
+        this.id4 = this.currentPartie.participants[index4].id;
       }
     });
 
@@ -599,7 +600,7 @@ export class AppComponent implements OnInit {
 
       this.currentMenes = [];
       this.lastMene = null;
-      this.partance = { posX: 0, posY: 0, couleur: 'pi', valeur: "0" };
+      this.partance = { posX: 0, posY: 0, couleur: '', valeur: "0" };
       this.couleur = '';
       this.enchere = 80;
       this.currentPartie = currentPartie;
@@ -611,7 +612,7 @@ export class AppComponent implements OnInit {
           case 1:
             this.currentCards2 = this.currentContrat.cards[1];
             this.currentCards3 = this.currentContrat.cards[2];
-            this.currentCards4 = this.currentContrat.cards[2];
+            this.currentCards4 = this.currentContrat.cards[3];
             break;
           case 2:
             this.currentCards2 = this.currentContrat.cards[0];

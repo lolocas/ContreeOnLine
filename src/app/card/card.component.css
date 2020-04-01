@@ -3,8 +3,8 @@ img {
 }
 
 .card-normal {
-  width: 100px;
-  height: 145px;
+  width: 120px;
+  height: 175px;
   display: flex;
   position: relative;
 }
@@ -15,8 +15,8 @@ img {
   position: relative;
 }
 .card-draggable {
-  width: 100px;
-  height: 145px;
+  width: 120px;
+  height: 175px;
   border: solid 1px #ccc;
   color: rgba(0, 0, 0, 0.87);
   cursor: move;
