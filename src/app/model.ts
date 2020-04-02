@@ -1,6 +1,7 @@
 export class Participant {
   public nom: string; //Nom du participant
   public isAdmin: boolean; //Est t'il administrateur
+  public isSpectateur: boolean; //Est t'il spectateur
   public id: number; //Identifiant
   public cards: Array<string>; //Les cartes du participant
 }

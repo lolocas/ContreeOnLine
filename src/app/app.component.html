@@ -28,15 +28,15 @@
 
   <div style="position: fixed;right: 0;top: 0;left: -200px;">
     <div style="justify-content: center!important;display: flex!important;">
-      <app-card *ngFor="let card of currentCards2; index as iCard" [value]=card [id]="id2" display="card-normal" isInvisible="true"
-                 [ngStyle]="rotationCard(iCard, 'nord')"></app-card>
+      <app-card *ngFor="let card of currentCards2; index as iCard" [value]=card [id]="id2" display="card-normal" [isInvisible]="!isCardVisible"
+                 [ngStyle]="rotationCard(iCard, 'nord')"></app-card>]
     </div>
     <div style="margin-top:20px;justify-content: center!important;display: flex!important;font-weight: bold;">{{nom2}}</div>
   </div>
 
   <div style="position: fixed;top: 0;left: 0;bottom: 0;">
     <div style="position: relative;top: 50%;transform: translateY(-50%);">
-      <app-card *ngFor="let card of currentCards3" [value]=card [id]="id3" display="card-rotate" isInvisible="true"></app-card>
+      <app-card *ngFor="let card of currentCards3" [value]=card [id]="id3" display="card-rotate" [isInvisible]="!isCardVisible"></app-card>
     </div>
   </div>
   <div style="top: 0;left: 150px;bottom: 0;position: fixed;">
@@ -49,7 +49,7 @@
   <div style="top: 0;right: 200px;bottom: 0;position: fixed;">
     <div style="position: relative;top: 50%;transform: translateY(-50%);">
       <!--style="display: inline-grid;align-items: center;text-align: center;"-->
-      <app-card *ngFor="let card of currentCards4" [value]=card [id]="id4" display="card-rotate" isInvisible="true"></app-card>
+      <app-card *ngFor="let card of currentCards4" [value]=card [id]="id4" display="card-rotate" [isInvisible]="!isCardVisible"></app-card>
     </div>
   </div>
 
@@ -77,8 +77,9 @@
     </div>
     <!--Volet d'administration-->
     <div style="bottom:0;position:absolute;" *ngIf="isAdmin">
-      <button style="" (click)="onResetPartie()" class="btn btn-danger btn-lg btn-block">Reset partie</button>
-      <button style="" (click)="onResetContrat()" class="btn btn-warning btn-lg btn-block">Reset contrat</button>
+      <div>Version 1.0</div>
+      <button (click)="onResetPartie()" class="btn btn-danger btn-lg btn-block">Reset partie</button>
+      <button (click)="onResetContrat()" class="btn btn-warning btn-lg btn-block">Reset contrat</button>
       <button style="margin-bottom:100px" (click)="onNewContrat()" class="btn btn-success btn-lg btn-block">Nouveau contrat</button>
       <div>
         <label for="spinner">Enchère:</label>

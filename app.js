@@ -169,11 +169,17 @@ function addNom(nomInfo) {
       id: currentPartie.participants.length + 1,
       isAdmin: nomInfo.isAdmin
     }
-    currentPartie.participants.push(participant);
-    var newCards = SortCards(currentCards.slice(0, 8));
-    currentPartie.contrats[currentPartie.contrats.length - 1].initCards.push(newCards.slice(0));
-    currentPartie.contrats[currentPartie.contrats.length - 1].cards.push(newCards.slice(0)); //Clonage
-    currentCards = currentCards.slice(8);
+    if (currentPartie.participants.length <= 3) {
+      currentPartie.participants.push(participant);
+      var newCards = SortCards(currentCards.slice(0, 8));
+      currentPartie.contrats[currentPartie.contrats.length - 1].initCards.push(newCards.slice(0));
+      currentPartie.contrats[currentPartie.contrats.length - 1].cards.push(newCards.slice(0)); //Clonage
+      currentCards = currentCards.slice(8);
+    }
+    else {
+      participant.isSpectateur = true;
+      currentPartie.participants.push(participant);
+    }
   }
 }
 

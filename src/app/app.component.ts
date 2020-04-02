@@ -34,6 +34,8 @@ export class AppComponent implements OnInit {
   public partanceId: number;
   @Input()
   public canAnnulerCarte: boolean;
+  @Input()
+  public isCardVisible: boolean;
 
   @Output()
   public socket: any;
@@ -81,7 +83,7 @@ export class AppComponent implements OnInit {
   }
 
   public positionneJoueur() {
-    this.positionJoueur = "sud";
+    this.positionJoueur = "";
     this.canAnnulerCarte = false;
     //On démarre la mène
     if (this.currentContrat && this.currentContrat.menes[this.currentContrat.menes.length - 1].cards == undefined) {
@@ -186,6 +188,7 @@ export class AppComponent implements OnInit {
     var posY;
     switch (this.currentParticipant.id) {
       case 1:
+      default:
         switch (this.currentContrat.playerId) {
           case 1: positionCard = "sud"; break;
           case 2: positionCard = "nord"; break;
@@ -262,6 +265,7 @@ export class AppComponent implements OnInit {
     var positionPartance: string;
     switch (this.currentParticipant.id) {
       case 1:
+      default:
         switch (this.currentContrat.partanceId) {
           case 1: positionPartance = "sud"; break;
           case 2: positionPartance = "nord"; break;
@@ -440,6 +444,7 @@ export class AppComponent implements OnInit {
     this.currentCards = this.currentContrat.cards[this.currentParticipant.id - 1];
     switch (this.currentParticipant.id) {
       case 1:
+      default:
         this.currentCards2 = this.currentContrat.cards[1];
         this.currentCards3 = this.currentContrat.cards[2];
         this.currentCards4 = this.currentContrat.cards[3];
@@ -480,9 +485,13 @@ export class AppComponent implements OnInit {
           posX = -NewPos.top * window.innerHeight;
           posY = NewPos.left * window.innerWidth;
         }
+        else if (this.currentId > 4) {
+          posX = NewPos.left * window.innerWidth;
+          posY = NewPos.top * window.innerHeight;
+        }
       }
       else if (NewPos.id == 2) {
-        if (this.currentId == 1) {
+        if (this.currentId == 1 || this.currentId > 4) {
           posX = NewPos.left * window.innerWidth;
           posY = -NewPos.top * window.innerHeight;
         }
@@ -496,7 +505,7 @@ export class AppComponent implements OnInit {
         }
       }
       else if (NewPos.id == 3) {
-        if (this.currentId == 1) {
+        if (this.currentId == 1 || this.currentId > 4) {
           posX = -NewPos.top * window.innerHeight;
           posY = NewPos.left * window.innerWidth;
         }
@@ -510,7 +519,7 @@ export class AppComponent implements OnInit {
         }
       }
       else if (NewPos.id == 4) {
-        if (this.currentId == 1) {
+        if (this.currentId == 1 || this.currentId > 4) {
           posX = NewPos.top * window.innerHeight;
           posY = NewPos.left * window.innerWidth;
         }
@@ -612,8 +621,19 @@ export class AppComponent implements OnInit {
             index2 = 2;
             index3 = 0;
             index4 = 1;
-            break;
+            break;          
         }
+        //Spectateur
+        if (this.currentParticipant.id > 4) {
+          this.currentCards = this.currentContrat.cards[0];
+          index2 = 1;
+          index3 = 2;
+          index4 = 3;
+          this.isCardVisible = true;
+        }
+        else if (this.currentPartie.participants.length > 4)
+          alert("Le spectateur " + this.currentPartie.participants[this.currentPartie.participants.length - 1].nom + " se connecte");
+
         if (this.currentPartie.participants.length > index2) {
           this.currentCards2 = this.currentContrat.cards[index2];
           this.nom2 = this.currentPartie.participants[index2].nom;
