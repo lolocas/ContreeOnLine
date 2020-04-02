@@ -29,7 +29,7 @@
   <div style="position: fixed;right: 0;top: 0;left: -200px;">
     <div style="justify-content: center!important;display: flex!important;">
       <app-card *ngFor="let card of currentCards2; index as iCard" [value]=card [id]="id2" display="card-normal" [isInvisible]="!isCardVisible"
-                 [ngStyle]="rotationCard(iCard, 'nord')"></app-card>]
+                 [ngStyle]="rotationCard(iCard, 'nord')"></app-card>
     </div>
     <div style="margin-top:20px;justify-content: center!important;display: flex!important;font-weight: bold;">{{nom2}}</div>
   </div>
@@ -54,10 +54,10 @@
   </div>
 
   <div style="position: fixed;right: 0;bottom: 0;left: -200px;">
-    <div style="margin-bottom:30px;justify-content: center!important;display: flex!important;font-weight: bold;">{{currentNom}}</div>
+    <div style="margin-bottom:30px;justify-content: center!important;display: flex!important;font-weight: bold;">{{nom1}}</div>
     <div style="margin-bottom:20px; justify-content: center !important; display: flex !important;">
       <app-card *ngFor="let card of currentCards; index as iCard" [value]=card [id]="currentId" [socket]="socket" display="card-draggable"
-                [draggable]="positionJoueur=='sud'" [ngStyle]="rotationCard(iCard, 'sud')"></app-card>
+                [draggable]="positionJoueur=='sud' && !isSpectateur" [ngStyle]="rotationCard(iCard, 'sud')"></app-card>
     </div>
   </div>
   <button style="right: 250px;bottom: 30px;position: fixed;" (click)="onAnnulerCarte()" class="btn btn-info" [disabled]="!canAnnulerCarte">Annuler la carte</button>
@@ -67,8 +67,14 @@
       <div style="width:100px">Equipe 1</div>
       <div>Equipe 2</div>
     </div>
+    <div style="display: flex">
+      <div style="width:100px;font-size:small;font-weight: bold;">{{equipeNom1}}</div>
+      <div style="width:100px;font-size:small;font-weight: bold;">{{equipeNom2}}</div>
+    </div>
     <div *ngFor="let mene of currentMenes" style="display:flex">
-      <div style="width:100px">{{mene.total1}}</div>
+      <div style="width:100px">{{mene.total1
+        }}
+      </div>
       <div style="width: 100px">{{mene.total2}}</div>
     </div>
     <div style="display:flex;border:1px solid black">
@@ -77,13 +83,13 @@
     </div>
     <!--Volet d'administration-->
     <div style="bottom:0;position:absolute;" *ngIf="isAdmin">
-      <div>Version 1.0</div>
+      <div>Version 1.0.1</div>
       <button (click)="onResetPartie()" class="btn btn-danger btn-lg btn-block">Reset partie</button>
       <button (click)="onResetContrat()" class="btn btn-warning btn-lg btn-block">Reset contrat</button>
       <button style="margin-bottom:100px" (click)="onNewContrat()" class="btn btn-success btn-lg btn-block">Nouveau contrat</button>
       <div>
         <label for="spinner">Enchère:</label>
-        <input type="number" min="80" max="160" step="10" [(ngModel)]="enchere" (change)="onValidateEnchere()"/>
+        <input type="number" min="80" max="160" step="10" [(ngModel)]="enchere" (change)="onValidateEnchere()" />
       </div>
       <label>
         <input type="radio" name="radCouleur" value="H" [(ngModel)]="couleur" (change)="onValidateEnchere()">

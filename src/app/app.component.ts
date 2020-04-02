@@ -41,6 +41,8 @@ export class AppComponent implements OnInit {
   public socket: any;
   @Output()
   public isAdmin: boolean = false;
+  @Output()
+  public isSpectateur: boolean = false;
 
   public currentPartie: Partie;
   private currentContrat: Contrat;
@@ -52,9 +54,13 @@ export class AppComponent implements OnInit {
   private lastMene: Mene; //La dernière mène jouée entièrement
 
   public currentNom: string;
+  public nom1: string;
   public nom2: string;
   public nom3: string;
   public nom4: string;
+
+  public equipeNom1: string;
+  public equipeNom2: string;
 
   public currentId: number;
   public id2: number;
@@ -83,12 +89,13 @@ export class AppComponent implements OnInit {
   }
 
   public positionneJoueur() {
-    this.positionJoueur = "";
+    this.positionJoueur = "sud";
     this.canAnnulerCarte = false;
     //On démarre la mène
     if (this.currentContrat && this.currentContrat.menes[this.currentContrat.menes.length - 1].cards == undefined) {
       switch (this.currentParticipant.id) {
         case 1:
+        default:
           switch (this.currentContrat.playerId) {
             case 1: this.positionJoueur = "sud"; break;
             case 2: this.positionJoueur = "nord"; break;
@@ -126,6 +133,7 @@ export class AppComponent implements OnInit {
       if (this.currentContrat && this.currentParticipant) {
         switch (this.currentParticipant.id) {
           case 1:
+          default:
             switch (this.currentContrat.playerId) {
               case 1: this.positionJoueur = "est"; this.canAnnulerCarte = true; break;
               case 2: this.positionJoueur = "ouest"; break;
@@ -358,6 +366,7 @@ export class AppComponent implements OnInit {
 
   public onResetPartie() {
     if (confirm('Confirmez-vous le reset de la partie ?')) {
+      this.nom1 = '';
       this.nom2 = '';
       this.nom3 = '';
       this.nom4 = '';
@@ -441,7 +450,10 @@ export class AppComponent implements OnInit {
   }
 
   private refreshDesk() {
-    this.currentCards = this.currentContrat.cards[this.currentParticipant.id - 1];
+    if (this.isSpectateur)
+      this.currentCards = this.currentContrat.cards[0];
+    else
+      this.currentCards = this.currentContrat.cards[this.currentParticipant.id - 1];
     switch (this.currentParticipant.id) {
       case 1:
       default:
@@ -585,6 +597,8 @@ export class AppComponent implements OnInit {
     });
 
     this.socket.on("addNom", currentPartie => {
+      this.nom1 = this.currentNom;
+
       this.currentPartie = currentPartie;
       this.currentContrat = this.currentPartie.contrats[currentPartie.contrats.length - 1];
 
@@ -630,10 +644,11 @@ export class AppComponent implements OnInit {
           index3 = 2;
           index4 = 3;
           this.isCardVisible = true;
+          this.isSpectateur = true;
+          this.nom1 = this.currentPartie.participants[0].nom;
         }
-        else if (this.currentPartie.participants.length > 4)
+        else if (this.currentPartie.participants[this.currentPartie.participants.length - 1].isSpectateur)
           alert("Le spectateur " + this.currentPartie.participants[this.currentPartie.participants.length - 1].nom + " se connecte");
-
         if (this.currentPartie.participants.length > index2) {
           this.currentCards2 = this.currentContrat.cards[index2];
           this.nom2 = this.currentPartie.participants[index2].nom;
@@ -648,6 +663,10 @@ export class AppComponent implements OnInit {
           this.currentCards4 = this.currentContrat.cards[index4];
           this.nom4 = this.currentPartie.participants[index4].nom;
           this.id4 = this.currentPartie.participants[index4].id;
+        }
+        if (this.currentPartie.participants.length>= 4) {
+          this.equipeNom1 = this.currentPartie.participants[0].nom + ' ' + this.currentPartie.participants[1].nom;
+          this.equipeNom2 = this.currentPartie.participants[2].nom + ' ' + this.currentPartie.participants[3].nom;
         }
       }
     });
