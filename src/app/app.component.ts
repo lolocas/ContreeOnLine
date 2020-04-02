@@ -262,7 +262,7 @@ export class AppComponent implements OnInit {
     var positionPartance: string;
     switch (this.currentParticipant.id) {
       case 1:
-        switch (this.currentContrat.playerId) {
+        switch (this.currentContrat.partanceId) {
           case 1: positionPartance = "sud"; break;
           case 2: positionPartance = "nord"; break;
           case 3: positionPartance = "ouest"; break;
@@ -270,7 +270,7 @@ export class AppComponent implements OnInit {
         }
         break;
       case 2:
-        switch (this.currentContrat.playerId) {
+        switch (this.currentContrat.partanceId) {
           case 1: positionPartance = "nord"; break;
           case 2: positionPartance = "sud"; break;
           case 3: positionPartance = "est"; break;
@@ -278,7 +278,7 @@ export class AppComponent implements OnInit {
         }
         break;
       case 3:
-        switch (this.currentContrat.playerId) {
+        switch (this.currentContrat.partanceId) {
           case 1: positionPartance = "est"; break;
           case 2: positionPartance = "ouest"; break;
           case 3: positionPartance = "sud"; break;
@@ -286,7 +286,7 @@ export class AppComponent implements OnInit {
         }
         break;
       case 4:
-        switch (this.currentContrat.playerId) {
+        switch (this.currentContrat.partanceId) {
           case 1: positionPartance = "ouest"; break;
           case 2: positionPartance = "est"; break;
           case 3: positionPartance = "nord"; break;
@@ -436,6 +436,32 @@ export class AppComponent implements OnInit {
     return '';
   }
 
+  private refreshDesk() {
+    this.currentCards = this.currentContrat.cards[this.currentParticipant.id - 1];
+    switch (this.currentParticipant.id) {
+      case 1:
+        this.currentCards2 = this.currentContrat.cards[1];
+        this.currentCards3 = this.currentContrat.cards[2];
+        this.currentCards4 = this.currentContrat.cards[3];
+        break;
+      case 2:
+        this.currentCards2 = this.currentContrat.cards[0];
+        this.currentCards3 = this.currentContrat.cards[3];
+        this.currentCards4 = this.currentContrat.cards[2];
+        break;
+      case 3:
+        this.currentCards2 = this.currentContrat.cards[3];
+        this.currentCards3 = this.currentContrat.cards[1];
+        this.currentCards4 = this.currentContrat.cards[0];
+        break;
+      case 4:
+        this.currentCards2 = this.currentContrat.cards[2];
+        this.currentCards3 = this.currentContrat.cards[0];
+        this.currentCards4 = this.currentContrat.cards[1];
+        break;
+    }
+  }
+
   public ngAfterViewInit() {
     this.socket.on("positionCard", NewPos => {
       var cardToMove = this.cardList.toArray().find(item => item.value == NewPos.value);
@@ -518,17 +544,26 @@ export class AppComponent implements OnInit {
             this.currentMenes.push(new Mene(undefined, 0, 10));
         }
 
-        Utils.sleep(2000).then(() => {
-          for (var intTour = 0; intTour < this.currentPartie.nbTour; intTour++) {
-            if (this.currentCards && this.currentCards.indexOf(currentMene.cards[intTour].value) >= 0)
-              this.currentCards.splice(this.currentCards.indexOf(currentMene.cards[intTour].value), 1);
-            if (this.currentCards2 && this.currentCards2.indexOf(currentMene.cards[intTour].value) >= 0)
-              this.currentCards2.splice(this.currentCards2.indexOf(currentMene.cards[intTour].value), 1);
-            if (this.currentCards3 && this.currentCards3.indexOf(currentMene.cards[intTour].value) >= 0)
-              this.currentCards3.splice(this.currentCards3.indexOf(currentMene.cards[intTour].value), 1);
-            if (this.currentCards4 && this.currentCards4.indexOf(currentMene.cards[intTour].value) >= 0)
-              this.currentCards4.splice(this.currentCards4.indexOf(currentMene.cards[intTour].value), 1);
-          }
+        Utils.sleep(1500).then(() => {
+          //Suppression des cartes sur le tapis
+          //for (var intTour = 0; intTour < this.currentPartie.nbTour; intTour++) {
+          //  if (this.currentCards && this.currentCards.indexOf(currentMene.cards[intTour].value) >= 0)
+          //    this.currentCards.splice(this.currentCards.indexOf(currentMene.cards[intTour].value), 1);
+          //  if (this.currentCards2 && this.currentCards2.indexOf(currentMene.cards[intTour].value) >= 0)
+          //    this.currentCards2.splice(this.currentCards2.indexOf(currentMene.cards[intTour].value), 1);
+          //  if (this.currentCards3 && this.currentCards3.indexOf(currentMene.cards[intTour].value) >= 0)
+          //    this.currentCards3.splice(this.currentCards3.indexOf(currentMene.cards[intTour].value), 1);
+          //  if (this.currentCards4 && this.currentCards4.indexOf(currentMene.cards[intTour].value) >= 0)
+          //    this.currentCards4.splice(this.currentCards4.indexOf(currentMene.cards[intTour].value), 1);
+          //}
+            this.currentCards.splice(0, this.currentCards.length);
+            this.currentCards2.splice(0, this.currentCards2.length);
+            this.currentCards3.splice(0, this.currentCards3.length);
+            this.currentCards4.splice(0, this.currentCards4.length);
+          //Rafraichissement des cartes
+          Utils.sleep(0).then(() => {
+            this.refreshDesk();
+          });
         });
       }
       this.positionneJoueur();
@@ -579,15 +614,21 @@ export class AppComponent implements OnInit {
             index4 = 1;
             break;
         }
-        this.currentCards2 = this.currentContrat.cards[index2];
-        this.nom2 = this.currentPartie.participants[index2].nom;
-        this.id2 = this.currentPartie.participants[index2].id;
-        this.currentCards3 = this.currentContrat.cards[index3];
-        this.nom3 = this.currentPartie.participants[index3].nom;
-        this.id3 = this.currentPartie.participants[index3].id;
-        this.currentCards4 = this.currentContrat.cards[index4];
-        this.nom4 = this.currentPartie.participants[index4].nom;
-        this.id4 = this.currentPartie.participants[index4].id;
+        if (this.currentPartie.participants.length > index2) {
+          this.currentCards2 = this.currentContrat.cards[index2];
+          this.nom2 = this.currentPartie.participants[index2].nom;
+          this.id2 = this.currentPartie.participants[index2].id;
+        }
+        if (this.currentPartie.participants.length > index3) {
+          this.currentCards3 = this.currentContrat.cards[index3];
+          this.nom3 = this.currentPartie.participants[index3].nom;
+          this.id3 = this.currentPartie.participants[index3].id;
+        }
+        if (this.currentPartie.participants.length > index4) {
+          this.currentCards4 = this.currentContrat.cards[index4];
+          this.nom4 = this.currentPartie.participants[index4].nom;
+          this.id4 = this.currentPartie.participants[index4].id;
+        }
       }
     });
 
@@ -606,30 +647,9 @@ export class AppComponent implements OnInit {
       this.currentPartie = currentPartie;
       this.currentContrat = this.currentPartie.contrats[this.currentPartie.contrats.length - 1];
 
-      Utils.sleep(500).then(() => {
-        this.currentCards = this.currentContrat.cards[this.currentParticipant.id - 1];
-        switch (this.currentParticipant.id) {
-          case 1:
-            this.currentCards2 = this.currentContrat.cards[1];
-            this.currentCards3 = this.currentContrat.cards[2];
-            this.currentCards4 = this.currentContrat.cards[3];
-            break;
-          case 2:
-            this.currentCards2 = this.currentContrat.cards[0];
-            this.currentCards3 = this.currentContrat.cards[3];
-            this.currentCards4 = this.currentContrat.cards[2];
-            break;
-          case 3:
-            this.currentCards2 = this.currentContrat.cards[3];
-            this.currentCards3 = this.currentContrat.cards[1];
-            this.currentCards4 = this.currentContrat.cards[0];
-            break;
-          case 4:
-            this.currentCards2 = this.currentContrat.cards[2];
-            this.currentCards3 = this.currentContrat.cards[0];
-            this.currentCards4 = this.currentContrat.cards[1];
-            break;
-        }
+      Utils.sleep(500).then(() => {        
+        this.refreshDesk();
+
         this.positionnePartance();
         this.positionneJoueur();
       });

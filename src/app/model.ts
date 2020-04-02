@@ -9,11 +9,12 @@ export class Contrat {
   constructor(t?: Contrat) {
     Object.assign(this, t);
   }
-
+  public partanceId: number; //Joueur ayant la partance
   public playerId: number; //Joueur actuel
   public value: string; //Valeur du contrat
   public menes: Mene[]; //Les mènes
   public cards: string[][]; //La liste des cartes par participant
+  public initCards: string[][]; //La liste des cartes par participant au tirage
 }
 
 export class Mene {

@@ -16,8 +16,10 @@ var currentPartie = {
   nbTour: nbTour,
   participants: [],
   contrats: [{
+    partanceId : 1,
     playerId: 1,
     value: '',
+    initCards : [],
     cards: [],
     menes: [{
       cards: undefined,
@@ -52,6 +54,13 @@ Socketio.on("connection", socket => {
       var bestCard = calculMene(currentContrat, currentContrat.menes[currentContrat.menes.length - 1]);
 
       currentContrat.playerId = bestCard.id; //Celui qui vient de remporter la mène
+
+      //Suppression des 4 cartes jouées
+      for (var intTour = 0; intTour < currentPartie.nbTour; intTour++) {
+        var currentCard = currentContrat.menes[currentContrat.menes.length - 1].cards[intTour];
+        currentContrat.cards[currentCard.id - 1].splice(currentContrat.cards[currentCard.id - 1].indexOf(currentCard.value), 1);
+      }
+      //nouvelle mène
       currentContrat.menes.push({ cards: undefined, total1: 0, total2: 0 });
     }
     console.log(currentPartie);
@@ -62,7 +71,9 @@ Socketio.on("connection", socket => {
     Socketio.emit("onEnchereValidate", currentPartie);
   })
   socket.on("validatePartance", partance => {
-    currentPartie.contrats[currentPartie.contrats.length - 1].playerId = partance.id;
+    var currentContrat = currentPartie.contrats[currentPartie.contrats.length - 1];
+    currentContrat.partanceId = partance.id;
+    currentContrat.playerId = partance.id;
     Socketio.emit("onEnchereValidate", currentPartie);
   })
   socket.on("annulerDerniereCarte", value => {
@@ -85,8 +96,10 @@ Socketio.on("connection", socket => {
       nbTour: nbTour,
       participants: [],
       contrats: [{
+        partanceId: 1,
         playerId: 1,
         value: '',
+        initCards: [],
         cards: [],
         menes: [{
           cards: undefined,
@@ -97,11 +110,20 @@ Socketio.on("connection", socket => {
     };
 
     addNom(nomInfo);
-    console.log("newContrat");
     Socketio.emit("onNewContrat", currentPartie);
   });
   socket.on("resetCurrentContrat", () => {
-    currentPartie.contrats[currentPartie.contrats.length - 1].menes = [{
+    var currentContrat = currentPartie.contrats[currentPartie.contrats.length - 1];
+
+    currentContrat.cards = [];
+    for (var intTour = 0; intTour < currentPartie.nbTour; intTour++) {
+      var newCards = currentContrat.initCards[intTour];
+      if (newCards)
+        currentContrat.cards.push(newCards.slice(0));//Clonage
+    }
+    currentContrat.playerId = currentContrat.partanceId;
+
+    currentContrat.menes = [{
       cards: undefined,
       total1: 0,
       total2: 0
@@ -109,9 +131,13 @@ Socketio.on("connection", socket => {
     Socketio.emit("onNewContrat", currentPartie);
   });
   socket.on("newContrat", () => {
+    var newPlayer = nextPlayer(currentPartie.contrats[currentPartie.contrats.length - 1].partanceId);
+
     var newContrat = {
-      playerId: nextPlayer(currentPartie.contrats[currentPartie.contrats.length - 1].playerId),
+      partanceId: newPlayer,
+      playerId: newPlayer,
       value: '',
+      initCards: [],
       cards: [],
       menes: [{
         cards: undefined,
@@ -122,9 +148,12 @@ Socketio.on("connection", socket => {
 
     var sortedCards = cards.sort(function () { return 0.5 - Math.random() });
     for (var numParticipant = 1; numParticipant <= 4; numParticipant++) {
-      newContrat.cards.push(SortCards(sortedCards.slice(0, 8)));
+      var newCards = SortCards(sortedCards.slice(0, 8));
+      newContrat.initCards.push(newCards.slice(0));
+      newContrat.cards.push(newCards.slice(0)); //Clonage
       sortedCards = sortedCards.slice(8);
     }   
+
     currentPartie.contrats.push(newContrat);
     Socketio.emit("onNewContrat", currentPartie);
   });
@@ -141,7 +170,9 @@ function addNom(nomInfo) {
       isAdmin: nomInfo.isAdmin
     }
     currentPartie.participants.push(participant);
-    currentPartie.contrats[currentPartie.contrats.length - 1].cards.push(SortCards(currentCards.slice(0, 8)));
+    var newCards = SortCards(currentCards.slice(0, 8));
+    currentPartie.contrats[currentPartie.contrats.length - 1].initCards.push(newCards.slice(0));
+    currentPartie.contrats[currentPartie.contrats.length - 1].cards.push(newCards.slice(0)); //Clonage
     currentCards = currentCards.slice(8);
   }
 }
