@@ -172,6 +172,7 @@ function addNom(nomInfo) {
     if (currentPartie.participants.length <= 3) {
       currentPartie.participants.push(participant);
       var newCards = SortCards(currentCards.slice(0, 8));
+      console.log(newCards);
       currentPartie.contrats[currentPartie.contrats.length - 1].initCards.push(newCards.slice(0));
       currentPartie.contrats[currentPartie.contrats.length - 1].cards.push(newCards.slice(0)); //Clonage
       currentCards = currentCards.slice(8);
