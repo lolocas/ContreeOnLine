@@ -1,7 +1,5 @@
 import { Component, OnInit, Input, Output, ElementRef, AfterViewInit } from '@angular/core';
 import { CdkDragStart, CdkDragMove, CdkDragExit, CdkDragEnter, CdkDragRelease, CdkDragEnd } from '@angular/cdk/drag-drop';
-import { AppComponent } from '../app.component';
-import { utils } from 'protractor';
 import { Utils } from '../Utils';
 
 @Component({
@@ -19,6 +17,8 @@ export class CardComponent {
   public value: string;
   @Input()
   public id: number;
+  @Input()
+  public partieId: number;
   @Input()
   public display: string;
   @Input()
@@ -60,6 +60,7 @@ export class CardComponent {
     newPos.top = (e.distance.y / window.innerHeight);
     newPos.value = this.value;
     newPos.id = this.id;
+    newPos.partieId = this.partieId;
     //console.log(e.distance.x, e.distance.y);
     this.socket.emit("moveCard", newPos);
   }
@@ -74,6 +75,6 @@ export class CardComponent {
     //newPos.left = Math.abs((positionX / window.innerWidth));
     //newPos.top = Math.abs((positionY / window.innerHeight));
     //newPos.value = this.value;
-    this.socket.emit("cardDropped", this.value);
+    this.socket.emit("cardDropped", { value: this.value, partieId: this.partieId });
   }
 }

@@ -8,46 +8,105 @@ Http.listen(PORT, () => {
   console.log("Listening at :" + PORT +"...");
 });
 
+var listePartie = [];
 var nbTour = 4; //4
 var cards = ['7H', '7S', '7D', '7C', '8H', '8S', '8D', '8C', '9H', '9S', '9D', '9C', '0C', '0H', '0S', '0D', 'JH', 'JS', 'JD', 'JC', 'QH', 'QS', 'QD', 'QC', 'KH', 'KS', 'KD', 'KC', 'AC', 'AH', 'AS', 'AD'];
 var currentCards = [];
-var currentPartie = {
-  departId: 0,
-  nbTour: nbTour,
-  participants: [],
-  contrats: [{
-    partanceId : 1,
-    playerId: 1,
-    value: '',
-    initCards : [],
-    cards: [],
-    menes: [{
-      cards: undefined,
-      total1: 0,
-      total2: 0
-    }]
-  }]
-};
+//var currentPartie = {
+//  partieId: 0,
+//  departId: 0,
+//  nbTour: nbTour,
+//  participants: [],
+//  contrats: [{
+//    partanceId : 1,
+//    playerId: 1,
+//    value: '',
+//    initCards : [],
+//    cards: [],
+//    menes: [{
+//      cards: undefined,
+//      total1: 0,
+//      total2: 0
+//    }]
+//  }]
+//};
 
 
 Socketio.on("connection", socket => {
+  socket.on('joinRoom', function (room) {
+    socket.join(room);
+  });
   socket.on("addNom", nomInfo => {
-    addNom(nomInfo);
-    console.log(currentPartie);
-    Socketio.emit("addNom", currentPartie);
+    var currentPartie = getCurrentPartie(nomInfo.partieId);
+    //console.log("Connect",currentPartie);
+    if (currentPartie) {
+      addNom(currentPartie, nomInfo);
+      Socketio.in(nomInfo.partieId).emit("onAddNom", currentPartie);
+    }
   })
+
+  socket.on("creerPartie", nomInfo => {
+    var lastPartieId = 0;
+    if (listePartie.length > 0) {
+      var lastPartieId = listePartie[listePartie.length - 1].partieId;
+    }
+    lastPartieId = lastPartieId + 1;
+    var currentPartie = newPartie(lastPartieId);
+
+    listePartie.push(currentPartie);
+    addNom(currentPartie, nomInfo);
+    //console.log("creerPartie", listePartie);
+    Socketio.emit("onCreerPartie", lastPartieId);
+  })
+
+  socket.on("getAllPartie", () => {
+    var infoParties = [];
+    
+    listePartie.forEach(element => {
+      infoParties.push({ partieId: element.partieId, datePartie: element.datePartie, participants: element.participants });
+    });
+    
+    Socketio.emit("onGetAllPartie", infoParties);
+  })
+
+  socket.on("partieExists", value => {
+    var currentPartie = getCurrentPartie(value.partieId);
+    value.partieExists = false;
+    if (currentPartie) {
+      if (currentPartie.participants
+        && currentPartie.participants.find(item => item.nom == value.nom)) {
+        value.partieExists = true;
+      }
+    }
+    Socketio.emit("onPartieExists", value);
+  })
+
+  socket.on("deletePartie", value => {
+    var currentPartie = getCurrentPartie(value.partieId);
+    listePartie.splice(listePartie.indexOf(currentPartie), 1);
+
+    var infoParties = [];
+
+    listePartie.forEach(element => {
+      infoParties.push({ partieId: element.partieId, datePartie: element.datePartie, participants: element.participants });
+    });
+
+    Socketio.emit("onGetAllPartie", infoParties);
+  })
+
   socket.on("moveCard", NewPos => {
     //console.log(NewPos);
-    socket.broadcast.emit("positionCard", NewPos);
+    socket.to(NewPos.partieId).emit("onMoveCard", NewPos);
   })
   socket.on("cardDropped", value => {
+    var currentPartie = getCurrentPartie(value.partieId);
     var currentContrat = currentPartie.contrats[currentPartie.contrats.length - 1];
     if (currentContrat.menes[currentContrat.menes.length - 1].cards == undefined)
       currentContrat.menes[currentContrat.menes.length - 1].cards = [];
     else
       currentContrat.playerId = nextPlayer(currentContrat.playerId);
 
-    currentContrat.menes[currentContrat.menes.length - 1].cards.push({ id: currentContrat.playerId, value: value });
+    currentContrat.menes[currentContrat.menes.length - 1].cards.push({ id: currentContrat.playerId, value: value.value });
 
     //Nouvelle mène
     if (currentContrat.menes[currentContrat.menes.length - 1].cards.length == nbTour) {
@@ -63,20 +122,23 @@ Socketio.on("connection", socket => {
       //nouvelle mène
       currentContrat.menes.push({ cards: undefined, total1: 0, total2: 0 });
     }
-    console.log(currentPartie);
-    Socketio.emit("cardPlayed", currentPartie);
+    //console.log(currentPartie);
+    Socketio.in(value.partieId).emit("cardPlayed", currentPartie);
   })
   socket.on("validateEnchere", enchere => {
+    var currentPartie = getCurrentPartie(enchere.partieId);
     currentPartie.contrats[currentPartie.contrats.length - 1].value = enchere.enchere;
-    Socketio.emit("onEnchereValidate", currentPartie);
+    Socketio.in(enchere.partieId).emit("onEnchereValidate", currentPartie);
   })
   socket.on("validatePartance", partance => {
+    var currentPartie = getCurrentPartie(partance.partieId);
     var currentContrat = currentPartie.contrats[currentPartie.contrats.length - 1];
     currentContrat.partanceId = partance.id;
     currentContrat.playerId = partance.id;
-    Socketio.emit("onEnchereValidate", currentPartie);
+    Socketio.in(partance.partieId).emit("onEnchereValidate", currentPartie);
   })
   socket.on("annulerDerniereCarte", value => {
+    var currentPartie = getCurrentPartie(value.partieId);
     console.log("annulerDerniereCarte", value);
     var newPlayerId = value.id;
     var currentMene = currentPartie.contrats[currentPartie.contrats.length - 1].menes[currentPartie.contrats[currentPartie.contrats.length - 1].menes.length - 1];
@@ -88,31 +150,18 @@ Socketio.on("connection", socket => {
       newPlayerId = previousPlayer(value.id);
     }
     currentPartie.contrats[currentPartie.contrats.length - 1].playerId = newPlayerId;
-    Socketio.emit("onAnnulerDerniereCarte", { currentPartie: currentPartie, value: value });
+    Socketio.in(value.partieId).emit("onAnnulerDerniereCarte", { currentPartie: currentPartie, value: value });
   })
   socket.on("resetCurrentPartie", nomInfo => {
-    currentPartie = {
-      departId: 0,
-      nbTour: nbTour,
-      participants: [],
-      contrats: [{
-        partanceId: 1,
-        playerId: 1,
-        value: '',
-        initCards: [],
-        cards: [],
-        menes: [{
-          cards: undefined,
-          total1: 0,
-          total2: 0
-        }]
-      }]
-    };
+    var currentPartie = getCurrentPartie(nomInfo.partieId);
 
-    addNom(nomInfo);
-    Socketio.emit("onNewContrat", currentPartie);
+    currentPartie = newPartie(nomInfo.partieId);
+
+    addNom(currentPartie, nomInfo);
+    Socketio.in(nomInfo.partieId).emit("onNewContrat", currentPartie);
   });
-  socket.on("resetCurrentContrat", () => {
+  socket.on("resetCurrentContrat", info => {
+    var currentPartie = getCurrentPartie(info.partieId);
     var currentContrat = currentPartie.contrats[currentPartie.contrats.length - 1];
 
     currentContrat.cards = [];
@@ -128,9 +177,10 @@ Socketio.on("connection", socket => {
       total1: 0,
       total2: 0
     }];
-    Socketio.emit("onNewContrat", currentPartie);
+    Socketio.in(info.partieId).emit("onNewContrat", currentPartie);
   });
-  socket.on("newContrat", () => {
+  socket.on("newContrat", info => {
+    var currentPartie = getCurrentPartie(info.partieId);
     var newPlayer = nextPlayer(currentPartie.contrats[currentPartie.contrats.length - 1].partanceId);
 
     var newContrat = {
@@ -155,12 +205,13 @@ Socketio.on("connection", socket => {
     }   
 
     currentPartie.contrats.push(newContrat);
-    Socketio.emit("onNewContrat", currentPartie);
+    Socketio.in(info.partieId).emit("onNewContrat", currentPartie);
   });
 });
 
-function addNom(nomInfo) {
-  if (nomInfo.isAdmin) {
+function addNom(currentPartie, nomInfo) {
+  console.log("AddNom", currentPartie);
+  if (nomInfo.isAdmin && currentCards.length == 0) {
     currentCards = cards.sort(function () { return 0.5 - Math.random() });
   }
   if (!currentPartie.participants.find(item => item.nom == nomInfo.nom)) {
@@ -172,7 +223,6 @@ function addNom(nomInfo) {
     if (currentPartie.participants.length <= 3) {
       currentPartie.participants.push(participant);
       var newCards = SortCards(currentCards.slice(0, 8));
-      console.log(newCards);
       currentPartie.contrats[currentPartie.contrats.length - 1].initCards.push(newCards.slice(0));
       currentPartie.contrats[currentPartie.contrats.length - 1].cards.push(newCards.slice(0)); //Clonage
       currentCards = currentCards.slice(8);
@@ -206,7 +256,7 @@ function previousPlayer(currentPlayer) {
     return 1;
 }
 
-  function SortCards(cards) {
+function SortCards(cards) {
     return cards.sort((n1, n2) => {
       var replaceRank = [["7", 0], ["8", 1], ["9", 2], ["0", 3], ["J", 4], ["Q", 5], ["K", 6], ["A", 7]];
       var replaceSuit = [["C", 0], ["D", 1], ["S", 2], ["H", 3]];
@@ -219,7 +269,7 @@ function previousPlayer(currentPlayer) {
     })
 }
 
-  function calculMene(currentContrat, currentMene) {
+function calculMene(currentContrat, currentMene) {
   var suitAtout = currentContrat.value[currentContrat.value.length - 1];
   var lstCardValue = [["7", 0, 0], ["8", 0, 0], ["9", 0, 14], ["0", 10, 10], ["J", 2, 20], ["Q", 3, 3], ["K", 4, 4], ["A", 11, 11]];
   var listeCardInfo = [];
@@ -274,4 +324,30 @@ function previousPlayer(currentPlayer) {
   else
     currentMene.total2 = total;
   return bestCard;
+}
+
+function newPartie(partieId) {
+  return {
+    partieId: partieId,
+    departId: 0,
+    datePartie : new Date(),
+    nbTour: nbTour,
+    participants: [],
+    contrats: [{
+      partanceId: 1,
+      playerId: 1,
+      value: '',
+      initCards: [],
+      cards: [],
+      menes: [{
+        cards: undefined,
+        total1: 0,
+        total2: 0
+      }]
+    }]
+  };
+}
+
+function getCurrentPartie(partieId) {
+  return listePartie.find(item => item.partieId == partieId);
 }

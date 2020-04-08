@@ -1,5 +1,3 @@
-import { Contrat, Mene } from './model';
-
 export class Utils {
   static imgPath: string = "/assets/cards/";
 

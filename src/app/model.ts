@@ -1,3 +1,12 @@
+export class Partie {
+  public partieId: number; //L'id de partie
+  public departId: number; //L'id de celui qui a le départ
+  public datePartie: Date;
+  public nbTour: number; //Nombre de tour de cartes (4)
+  public participants: Array<Participant>; //La liste des participants
+  public contrats: Array<Contrat>; //La liste des contrats
+}
+
 export class Participant {
   public nom: string; //Nom du participant
   public isAdmin: boolean; //Est t'il administrateur
@@ -34,9 +43,3 @@ export class MeneCard {
   public value: string; //La valeur de la carte
 }
 
-export class Partie {
-  public departId: number; //L'id de celui qui a le départ
-  public nbTour: number; //Nombre de tour de cartes (4)
-  public participants: Array<Participant>; //La liste des participants
-  public contrats: Array<Contrat>; //La liste des contrats
-}

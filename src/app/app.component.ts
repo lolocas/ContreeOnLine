@@ -13,10 +13,6 @@ import { environment } from 'src/environments/environment';
 })
 
 export class AppComponent implements OnInit {
-    
-  @ViewChild("cardTable")
-  private cardTableCanvas: ElementRef;
-
   @ViewChildren(CardComponent)
   private cardList: QueryList<CardComponent>;
 
@@ -42,7 +38,17 @@ export class AppComponent implements OnInit {
   @Output()
   public isAdmin: boolean = false;
   @Output()
+  public partieId: number = 0;
+  @Output()
+  public selectPartieId: number = 0;
+  @Output()
+  public hasPartieId: boolean = false;
+  @Output()
+  public hasSelectPartieId: boolean = false;
+  @Output()
   public isSpectateur: boolean = false;
+  @Output()
+  public infoParties: any[] = [];
 
   public currentPartie: Partie;
   private currentContrat: Contrat;
@@ -53,11 +59,13 @@ export class AppComponent implements OnInit {
   public currentCards4: any;
   private lastMene: Mene; //La dernière mène jouée entièrement
 
+
   public currentNom: string;
   public nom1: string;
   public nom2: string;
   public nom3: string;
   public nom4: string;
+  public hasSpectateur: boolean;
 
   public equipeNom1: string;
   public equipeNom2: string;
@@ -68,7 +76,7 @@ export class AppComponent implements OnInit {
   public id4: number;
   public currentMenes: Mene[] = [];
 
-  constructor(private activatedRoute: ActivatedRoute) {
+  constructor(private activatedRoute: ActivatedRoute, private router: Router) {
   }
 
   public ngOnInit() {
@@ -78,12 +86,30 @@ export class AppComponent implements OnInit {
     //this.socket = io("https://contreeonline.herokuapp.com/");
     this.socket = io(environment.socketIoUrl);
     this.activatedRoute.queryParams.subscribe(params => {
-      if (params['nom']) {
+      if (params['nom'] || params['admin']) {
         if (params['admin'])
           this.isAdmin = (params['admin'] == 'true');
         if (params['nom'])
           this.currentNom = params['nom'];
-        this.socket.emit('addNom', { nom: this.currentNom, isAdmin: this.isAdmin });
+        if (params['partieId']) {
+          this.partieId = Number(params['partieId']);
+          this.hasPartieId = true;
+          if (this.partieId > 0) {
+            this.socket.emit('partieExists', { nom: this.currentNom, isAdmin: this.isAdmin, partieId: this.partieId });
+          }
+          else {
+            this.hasPartieId = false;
+            this.socket.emit('getAllPartie');
+          }
+        }
+        else {
+          this.hasPartieId = false;
+          this.socket.emit('getAllPartie');
+        }
+      }
+      else {
+        this.hasPartieId = false;
+        this.socket.emit('getAllPartie');
       }
     });
   }
@@ -262,15 +288,9 @@ export class AppComponent implements OnInit {
     var posAbsX = rect.x;
     var posAbsY = rect.y;
 
-    console.log("Position", positionCard);
-    console.log("Arrivée:", posX, posY);
-    console.log("Absolue:", posAbsX, posAbsY);
-
     //Différence entre la position actuelle et la position à atteindre
     var transX = transformValue.e - (posAbsX - posX);
     var transY = transformValue.f - (posAbsY - posY);
-
-    console.log(Math.trunc(transX), Math.trunc(transY));
 
     cardElt.style.transform = "translate3d(" + Math.trunc(transX) + "px, " + Math.trunc(transY) + "px, 0px)";
   }
@@ -367,7 +387,7 @@ export class AppComponent implements OnInit {
   public onAnnulerCarte() {
     var currentMene = this.currentContrat.menes[this.currentContrat.menes.length - 1];
     var value = currentMene.cards[currentMene.cards.length - 1].value;
-    this.socket.emit("annulerDerniereCarte", { value: value, id: this.currentParticipant.id });
+    this.socket.emit("annulerDerniereCarte", { value: value, id: this.currentParticipant.id, partieId : this.partieId });
   }
 
   public onResetPartie() {
@@ -377,28 +397,58 @@ export class AppComponent implements OnInit {
       this.nom3 = '';
       this.nom4 = '';
       this.partanceId = 1;
-      this.socket.emit("resetCurrentPartie", { nom: this.currentNom, isAdmin: this.isAdmin });
+      this.socket.emit("resetCurrentPartie", { nom: this.currentNom, isAdmin: this.isAdmin, partieId: this.partieId });
     }
   }
 
   public onResetContrat() {
     if (confirm('Confirmez-vous le reset du contrat ?')) {
-      this.socket.emit("resetCurrentContrat");
+      this.socket.emit("resetCurrentContrat", { partieId: this.partieId });
     }
   }
 
   public onNewContrat() {
     if (confirm('Confirmez-vous la création d\'un nouveau contrat ?')) {
-      this.socket.emit("newContrat");
+      this.socket.emit("newContrat", { partieId: this.partieId });
     }
   }
 
   public onValidateEnchere() {
-    this.socket.emit("validateEnchere", { enchere: this.enchere + this.couleur });
+    this.socket.emit("validateEnchere", { enchere: this.enchere + this.couleur, partieId : this.partieId });
   }
 
   public onValidatePartance() {
-    this.socket.emit("validatePartance", { id: Number(this.partanceId) });
+    this.socket.emit("validatePartance", { id: Number(this.partanceId), partieId : this.partieId });
+  }
+
+  public onCreerPartie() {
+    if (!this.currentNom) {
+      alert("Veuillez renseigner un nom");
+      return;
+    }
+
+    this.socket.emit("creerPartie", { nom: this.currentNom, isAdmin : true });
+  }
+
+  public onJoinPartie() {
+    if (!this.currentNom) {
+      alert("Veuillez renseigner un nom");
+      return;
+    }
+    this.partieId = this.selectPartieId;
+    this.socket.emit('addNom', { nom: this.currentNom, isAdmin: false, partieId: this.partieId });
+    this.navigate();
+  }
+
+  public onSelectPartie(partieId) {
+    this.selectPartieId = partieId;
+    this.hasSelectPartieId = true;
+  }
+
+  public onDeletePartie(partieId) {
+    if (confirm('Confirmez-vous la suppression de cette partie ?')) {
+      this.socket.emit('deletePartie', { partieId: partieId });
+    }
   }
 
   public rotationCard(index: number, position: string): any {
@@ -455,6 +505,12 @@ export class AppComponent implements OnInit {
     return '';
   }
 
+  public isBestCard(cardNumber: number): string {
+    if (this.lastMene && this.lastMene.cards && this.lastMene.cards.length == 4)
+      return (this.currentContrat.playerId == this.lastMene.cards[cardNumber].id ? 'bestCard' : '');
+    return '';
+  }
+
   private refreshDesk() {
     Utils.sleep(0).then(() => {
       if (this.isSpectateur)
@@ -487,8 +543,58 @@ export class AppComponent implements OnInit {
     });
   }
 
+  private navigate() {
+    this.router.navigate(
+      [],
+      {
+        relativeTo: this.activatedRoute,
+        queryParams: { nom: this.currentNom, partieId: this.partieId },
+        queryParamsHandling: 'merge', // remove to replace all query params by provided
+      });
+  }
+
   public ngAfterViewInit() {
-    this.socket.on("positionCard", NewPos => {
+    this.socket.on("onCreerPartie", partieId => {
+      if (this.isAdmin && (this.partieId == 0 || this.partieId == null)) {
+        this.partieId = partieId;
+
+        this.navigate();
+        this.socket.emit('joinRoom', this.partieId);
+      }
+    });
+
+    this.socket.on("onPartieExists", value => {
+      if (value.nom == this.currentNom && value.isAdmin == this.isAdmin && this.partieId == value.partieId) {
+        if (value.partieExists) {
+          this.socket.emit('joinRoom', this.partieId);
+          this.socket.emit('addNom', { nom: this.currentNom, isAdmin: this.isAdmin, partieId: this.partieId });
+        }
+        else {
+          this.partieId = null;
+          this.navigate();
+        }
+      }
+    })
+
+    this.socket.on("onGetAllPartie", info => {
+      this.infoParties = [];
+      info.forEach(element => {
+        var info = "Partie " + element.partieId + " créée par " + element.participants[0].nom + " le " + new Date(element.datePartie).toLocaleDateString() + " à " + new Date(element.datePartie).toLocaleTimeString();
+        if (element.participants.length >= 2)
+          info += " avec " + element.participants[1].nom;
+        if (element.participants.length >= 3)
+          info += ", " + element.participants[2].nom;
+        if (element.participants.length >= 4)
+          info += ", " + element.participants[3].nom;
+        this.infoParties.push({ id: element.partieId, info: info });
+      });
+      if (this.infoParties.length == 1) {
+        this.selectPartieId = this.infoParties[0].id;
+        this.hasSelectPartieId = true;
+      }
+    })
+
+    this.socket.on("onMoveCard", NewPos => {
       var cardToMove = this.cardList.toArray().find(item => item.value == NewPos.value);
       var posX: number;
       var posY: number;
@@ -559,6 +665,7 @@ export class AppComponent implements OnInit {
       this.currentPartie = currentPartie;
       this.currentContrat = this.currentPartie.contrats[currentPartie.contrats.length - 1];
       var currentMene = this.currentContrat.menes[this.currentContrat.menes.length - 1];
+      this.lastMene = null;
 
       //Dernière carte de la mène
       if (currentMene.cards == undefined) {
@@ -592,8 +699,9 @@ export class AppComponent implements OnInit {
       }
     });
 
-    this.socket.on("addNom", currentPartie => {
+    this.socket.on("onAddNom", currentPartie => {
       this.nom1 = this.currentNom;
+      this.hasSpectateur = false;
 
       this.currentPartie = currentPartie;
       this.currentContrat = this.currentPartie.contrats[currentPartie.contrats.length - 1];
@@ -643,8 +751,10 @@ export class AppComponent implements OnInit {
           this.isSpectateur = true;
           this.nom1 = this.currentPartie.participants[0].nom;
         }
-        else if (this.currentPartie.participants[this.currentPartie.participants.length - 1].isSpectateur)
+        else if (this.currentPartie.participants[this.currentPartie.participants.length - 1].isSpectateur) {
+          this.hasSpectateur = true;
           alert("Le spectateur " + this.currentPartie.participants[this.currentPartie.participants.length - 1].nom + " se connecte");
+        }
         if (this.currentPartie.participants.length > index2) {
           this.currentCards2 = this.currentContrat.cards[index2];
           this.nom2 = this.currentPartie.participants[index2].nom;
