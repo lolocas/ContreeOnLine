@@ -20,10 +20,8 @@
         <input *ngIf="isAdmin || hasSelectPartieId" type="text" class="form-control" placeholder="Nom" [(ngModel)]="currentNom">
       </div>
       <div class="text-center">
-        <div class="btn btn-primary" *ngIf="isAdmin" (click)="onCreerPartie()">Créer une partie</div>
-        <div class="btn btn-primary" *ngIf="!isAdmin && hasSelectPartieId" (click)="onJoinPartie()">
-          Rejoindre la partie {{selectPartieId}}
-        </div>
+        <div style="margin-right:10px;" class="btn btn-primary" *ngIf="isAdmin" (click)="onCreerPartie()">Créer une partie</div>
+        <div class="btn btn-primary" *ngIf="hasSelectPartieId" (click)="onJoinPartie()">Rejoindre la partie {{selectPartieId}}</div>
       </div>
     </div>
   </div>
@@ -33,20 +31,20 @@
   </div>
 
   <div style="position: fixed;left:0px;top:0px;">
-    <img src="{{cardValueToImage(0)}}" />
-    <div class="infoSurImage {{isBestCard(0)}}" style="top:20px">{{cardValueToName(0)}}</div>
+    <img src="{{lastMeneInfo[0].imageCardPath}}" />
+    <div class="infoSurImage {{lastMeneInfo[0].bestCardStyle}}" style="top:20px">{{lastMeneInfo[0].nom}}</div>
   </div>
   <div style="position: fixed;left:50px;top:0px;">
-    <img src="{{cardValueToImage(1)}}" />
-    <div class="infoSurImage {{isBestCard(1)}}" style="top:40px">{{cardValueToName(1)}}</div>
+    <img src="{{lastMeneInfo[1].imageCardPath}}" />
+    <div class="infoSurImage {{lastMeneInfo[1].bestCardStyle}}" style="top:40px">{{lastMeneInfo[1].nom}}</div>
   </div>
   <div style="position: fixed;left:100px;top:0px;">
-    <img src="{{cardValueToImage(2)}}" />
-    <div class="infoSurImage {{isBestCard(2)}}" style="top:60px">{{cardValueToName(2)}}</div>
+    <img src="{{lastMeneInfo[2].imageCardPath}}" />
+    <div class="infoSurImage {{lastMeneInfo[2].bestCardStyle}}" style="top:60px">{{lastMeneInfo[2].nom}}</div>
   </div>
   <div style="position: fixed;left:150px;top:0px;">
-    <img src="{{cardValueToImage(3)}}" />
-    <div class="infoSurImage {{isBestCard(3)}}" style="top:80px">{{cardValueToName(3)}}</div>
+    <img src="{{lastMeneInfo[3].imageCardPath}}" />
+    <div class="infoSurImage {{lastMeneInfo[3].bestCardStyle}}" style="top:80px">{{lastMeneInfo[3].nom}}</div>
   </div>
   <div style="position: fixed;left:{{posDepart.posX}};top:{{posDepart.posY}};">
     <img src="../assets/sontour.png" class="sontour-{{positionJoueur}}" />

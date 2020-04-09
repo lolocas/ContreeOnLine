@@ -2,7 +2,7 @@ import { Component, ViewChild, ViewChildren, ElementRef, OnInit, QueryList, View
 import { Router, ActivatedRoute, Params } from '@angular/router';
 import io from "socket.io-client";
 import { CardComponent } from './card/card.component';
-import { Participant, Partie, Mene, Contrat, MeneCard } from './model';
+import { Participant, Partie, Mene, Contrat, MeneCard, LastMeneInfo } from './model';
 import { Utils } from './Utils';
 import { environment } from 'src/environments/environment';
 
@@ -58,7 +58,7 @@ export class AppComponent implements OnInit {
   public currentCards3: any;
   public currentCards4: any;
   private lastMene: Mene; //La dernière mène jouée entièrement
-
+  public lastMeneInfo: Array<LastMeneInfo> = [new LastMeneInfo(), new LastMeneInfo(), new LastMeneInfo(), new LastMeneInfo()];
 
   public currentNom: string;
   public nom1: string;
@@ -80,8 +80,6 @@ export class AppComponent implements OnInit {
   }
 
   public ngOnInit() {
-
-    environment.production
     //this.socket = io("http://localhost:3000");
     //this.socket = io("https://contreeonline.herokuapp.com/");
     this.socket = io(environment.socketIoUrl);
@@ -492,25 +490,6 @@ export class AppComponent implements OnInit {
     }
   }
 
-  public cardValueToImage(cardNumber: number): string {
-    if (this.lastMene && this.lastMene.cards && this.lastMene.cards.length == 4)
-      return Utils.cardValueToImage(this.lastMene.cards[cardNumber].value, '');
-    
-    return '../assets/pi.png';
-  }
-
-  public cardValueToName(cardNumber: number): string {
-    if (this.lastMene && this.lastMene.cards && this.lastMene.cards.length == 4)
-      return this.currentPartie.participants.find(item => item.id == this.lastMene.cards[cardNumber].id).nom;
-    return '';
-  }
-
-  public isBestCard(cardNumber: number): string {
-    if (this.lastMene && this.lastMene.cards && this.lastMene.cards.length == 4)
-      return (this.currentContrat.playerId == this.lastMene.cards[cardNumber].id ? 'bestCard' : '');
-    return '';
-  }
-
   private refreshDesk() {
     Utils.sleep(0).then(() => {
       if (this.isSpectateur)
@@ -551,6 +530,14 @@ export class AppComponent implements OnInit {
         queryParams: { nom: this.currentNom, partieId: this.partieId },
         queryParamsHandling: 'merge', // remove to replace all query params by provided
       });
+  }
+
+  private fillLastMenInfo(lastMene: Mene) {
+    this.lastMeneInfo = [new LastMeneInfo(), new LastMeneInfo(), new LastMeneInfo(), new LastMeneInfo()];
+    this.lastMeneInfo[0] = new LastMeneInfo(0, lastMene, this.currentContrat.playerId, this.currentPartie.participants);
+    this.lastMeneInfo[1] = new LastMeneInfo(1, lastMene, this.currentContrat.playerId, this.currentPartie.participants);
+    this.lastMeneInfo[2] = new LastMeneInfo(2, lastMene, this.currentContrat.playerId, this.currentPartie.participants);
+    this.lastMeneInfo[3] = new LastMeneInfo(3, lastMene, this.currentContrat.playerId, this.currentPartie.participants);
   }
 
   public ngAfterViewInit() {
@@ -665,12 +652,11 @@ export class AppComponent implements OnInit {
       this.currentPartie = currentPartie;
       this.currentContrat = this.currentPartie.contrats[currentPartie.contrats.length - 1];
       var currentMene = this.currentContrat.menes[this.currentContrat.menes.length - 1];
-      this.lastMene = null;
 
       //Dernière carte de la mène
       if (currentMene.cards == undefined) {
-        this.lastMene = this.currentContrat.menes[this.currentContrat.menes.length - 2];
-        var currentMene = this.lastMene;
+        currentMene = this.currentContrat.menes[this.currentContrat.menes.length - 2];
+        this.fillLastMenInfo(currentMene);
         this.currentMenes.push(currentMene);
 
         if (this.currentMenes.length == 8) { //Dernière carte du contrat on rajoute le 10 de der
@@ -785,7 +771,7 @@ export class AppComponent implements OnInit {
       this.currentCards4 = [];
 
       this.currentMenes = [];
-      this.lastMene = null;
+      this.lastMeneInfo = [new LastMeneInfo(), new LastMeneInfo(), new LastMeneInfo(), new LastMeneInfo()];
       this.partance = { posX: 0, posY: 0, couleur: '', valeur: "0" };
       this.couleur = '';
       this.enchere = 80;

@@ -1,3 +1,5 @@
+import { Utils } from './Utils';
+
 export class Partie {
   public partieId: number; //L'id de partie
   public departId: number; //L'id de celui qui a le départ
@@ -41,5 +43,22 @@ export class Mene {
 export class MeneCard {
   public id: number;   //L'id du joueur de la carte
   public value: string; //La valeur de la carte
+}
+
+export class LastMeneInfo {
+  constructor(index?: number, lastMene?: Mene, playerId?: number, participants?: Participant[]) {
+    if (lastMene) {
+      this.imageCardPath = Utils.cardValueToImage(lastMene.cards[index].value, '');
+      this.nom = participants.find(item => item.id == lastMene.cards[index].id).nom;
+
+      if (playerId == lastMene.cards[index].id)
+        this.bestCardStyle = 'bestCard';
+      else
+        this.bestCardStyle = '';
+    }
+  }
+  public imageCardPath: string = '../assets/pi.png';
+  public nom: string;
+  public bestCardStyle: string;
 }
 
