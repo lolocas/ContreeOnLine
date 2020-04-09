@@ -143,7 +143,7 @@ Socketio.on("connection", socket => {
     var newPlayerId = value.id;
     var currentMene = currentPartie.contrats[currentPartie.contrats.length - 1].menes[currentPartie.contrats[currentPartie.contrats.length - 1].menes.length - 1];
     //Annulation en début de mène on garde le même player
-    if (currentMene.cards.length == 1)
+    if (currentMene && currentMene.cards && currentMene.cards.length == 1)
       currentMene.cards = undefined;
     else { //Annulation en cours de mène on recule le player d'un cran
       currentMene.cards.splice(-1, 1);
