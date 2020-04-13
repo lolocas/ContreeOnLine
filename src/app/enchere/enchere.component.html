@@ -1,0 +1,30 @@
+<div class="enchere" 
+     [ngStyle]="{'left':posDepart.posX,'top':posDepart.posY, 'background-color':backgroundColor }"
+     *ngIf="encherePosition">
+  <div>
+    <label style="font-weight:bold">Enchère:</label>
+    <input type="number" [min]="minEnchere" max="160" step="10" [(ngModel)]="enchere"  [disabled]="encherePosition!='sud'"/>
+  </div>
+  <label>
+    <input type="radio" name="enchereCouleur" value="H" [(ngModel)]="couleur" [disabled]="encherePosition!='sud'">
+    <img src="../assets/coeur.png" width="49" height="50">
+  </label>
+  <label>
+    <input type="radio" name="enchereCouleur" value="S" [(ngModel)]="couleur" [disabled]="encherePosition!='sud'">
+    <img src="../assets/pique.png" width="49" height="50">
+  </label>
+  <label>
+    <input type="radio" name="enchereCouleur" value="D" [(ngModel)]="couleur" [disabled]="encherePosition!='sud'">
+    <img src="../assets/carreau.png" width="49" height="50">
+  </label>
+  <label>
+    <input type="radio" name="enchereCouleur" value="C" [(ngModel)]="couleur" [disabled]="encherePosition!='sud'">
+    <img src="../assets/trefle.png" width="49" height="50">
+  </label>
+  <!--</div>-->
+  <div style="display:flex">
+    <button class="col-4 btn btn-danger btn-sm" (click)="onPasser()" [disabled]="encherePosition!='sud'">Passer</button>
+    <div class="col-4"></div>
+    <button class="col-4 btn btn-success btn-sm" (click)="onValidate()" [disabled]="!couleur || encherePosition!='sud'">Valider</button>
+  </div>
+</div>

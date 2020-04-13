@@ -100,6 +100,10 @@ Socketio.on("connection", socket => {
   })
   socket.on("cardDropped", value => {
     var currentPartie = getCurrentPartie(value.partieId);
+    if (currentPartie == undefined) {
+      console.log("cardDropped", listePartie, "Partie " + value.partieId + " non trouvée");
+      return;
+    }
     var currentContrat = currentPartie.contrats[currentPartie.contrats.length - 1];
     if (currentContrat.menes[currentContrat.menes.length - 1].cards == undefined)
       currentContrat.menes[currentContrat.menes.length - 1].cards = [];
@@ -123,19 +127,28 @@ Socketio.on("connection", socket => {
       currentContrat.menes.push({ cards: undefined, total1: 0, total2: 0 });
     }
     //console.log(currentPartie);
-    Socketio.in(value.partieId).emit("cardPlayed", currentPartie);
+    Socketio.in(value.partieId).emit("cardPlayed", { currentPartie: currentPartie, hasDblClick: value.hasDblClick });
   })
   socket.on("validateEnchere", enchere => {
     var currentPartie = getCurrentPartie(enchere.partieId);
-    currentPartie.contrats[currentPartie.contrats.length - 1].value = enchere.enchere;
-    Socketio.in(enchere.partieId).emit("onEnchereValidate", currentPartie);
+    var currentContrat = currentPartie.contrats[currentPartie.contrats.length - 1];
+    console.log(enchere);
+    if (enchere.enchere > 0)
+      currentContrat.value = enchere.enchere + enchere.couleur;
+    currentContrat.enchereId = enchere.enchereId;
+    Socketio.in(enchere.partieId).emit("onValidateEnchere", { partanceId: currentContrat.partanceId, enchereId: enchere.enchereId, enchere: enchere.enchere, couleur: enchere.couleur });
   })
+
   socket.on("validatePartance", partance => {
     var currentPartie = getCurrentPartie(partance.partieId);
+    if (currentPartie == undefined) {
+      console.log("validatePartance", listePartie, "Partie " + partance.partieId + " non trouvée");
+      return;
+    }
     var currentContrat = currentPartie.contrats[currentPartie.contrats.length - 1];
     currentContrat.partanceId = partance.id;
     currentContrat.playerId = partance.id;
-    Socketio.in(partance.partieId).emit("onEnchereValidate", currentPartie);
+    Socketio.in(partance.partieId).emit("onValidatePartance", currentPartie);
   })
   socket.on("annulerDerniereCarte", value => {
     var currentPartie = getCurrentPartie(value.partieId);
@@ -152,6 +165,13 @@ Socketio.on("connection", socket => {
     currentPartie.contrats[currentPartie.contrats.length - 1].playerId = newPlayerId;
     Socketio.in(value.partieId).emit("onAnnulerDerniereCarte", { currentPartie: currentPartie, value: value });
   })
+
+  socket.on("annulerDerniereEnchere", enchere => {
+    var currentPartie = getCurrentPartie(enchere.partieId);
+    var currentContrat = currentPartie.contrats[currentPartie.contrats.length - 1];
+    Socketio.in(enchere.partieId).emit("onAnnulerDerniereEnchere", { partanceId: currentContrat.partanceId });
+  });
+
   socket.on("resetCurrentPartie", nomInfo => {
     var currentPartie = getCurrentPartie(nomInfo.partieId);
 
@@ -336,6 +356,7 @@ function newPartie(partieId) {
     contrats: [{
       partanceId: 1,
       playerId: 1,
+      enchereId:1,
       value: '',
       initCards: [],
       cards: [],

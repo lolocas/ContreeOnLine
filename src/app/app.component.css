@@ -44,6 +44,26 @@ input:focus {
   box-shadow: 0 0 0 0 !important;
 }
 
+.nomPlayer {
+  width: 100px;
+  text-align: center;
+  border: solid 2px gray;
+  box-shadow: 10px 10px 5px rgba(0,0,0,0.6);
+  border-radius: 25px;
+  font-weight: bold;
+}
+
+  .nomPlayer.equipe1 {
+    background-color: lightskyblue;
+  }
+
+  .nomPlayer.equipe2 {
+    background-color: lightgreen;
+  }
+
+  .nomPlayer.enchereIdColor {
+    color: darkorange;
+  }
 
 .sontour-sud {
   transform: rotate(270deg);

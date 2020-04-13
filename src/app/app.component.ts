@@ -2,8 +2,8 @@ import { Component, ViewChild, ViewChildren, ElementRef, OnInit, QueryList, View
 import { Router, ActivatedRoute, Params } from '@angular/router';
 import io from "socket.io-client";
 import { CardComponent } from './card/card.component';
-import { Participant, Partie, Mene, Contrat, MeneCard, LastMeneInfo } from './model';
-import { Utils } from './Utils';
+import { Participant, Partie, Mene, Contrat, MeneCard, LastMeneInfo, EnchereInfo } from './model';
+import { UtilsHelper } from './UtilsHelper';
 import { environment } from 'src/environments/environment';
 
 @Component({
@@ -21,9 +21,27 @@ export class AppComponent implements OnInit {
   @Output()
   public positionJoueur: string;
   @Input()
-  public partance: { posX: number, posY: number, couleur: string, valeur: string } = { posX: 0, posY: 0, couleur: '', valeur: "0" };
+  @Output()
+  public positionPartance: string;
   @Input()
+  public partance: { posX: number, posY: number, valeur: string, couleur: string } = { posX: 0, posY: 0, valeur: '', couleur: '' };
+
+  @Input()
+  @Output()
   public enchere: number = 80;
+  @Output()
+  public minEnchere: number = 80;
+  @Output()
+  public encherePosition: string;
+  @Output()
+  public enchereId: number;
+  @Output()
+  public bestEnchereId: number;
+  @Output()
+  public isEnchereVisible: boolean;
+  @Output()
+  public canAnnulerEnchere: boolean;
+
   @Input()
   public couleur: string;
   @Input()
@@ -57,8 +75,7 @@ export class AppComponent implements OnInit {
   public currentCards2: any;
   public currentCards3: any;
   public currentCards4: any;
-  private lastMene: Mene; //La dernière mène jouée entièrement
-  public lastMeneInfo: Array<LastMeneInfo> = [new LastMeneInfo(), new LastMeneInfo(), new LastMeneInfo(), new LastMeneInfo()];
+  public lastMeneInfo: Array<LastMeneInfo> = [new LastMeneInfo(), new LastMeneInfo(), new LastMeneInfo(), new LastMeneInfo()]; //La dernière mène jouée entièrement
 
   public currentNom: string;
   public nom1: string;
@@ -69,12 +86,15 @@ export class AppComponent implements OnInit {
 
   public equipeNom1: string;
   public equipeNom2: string;
+  public classEquipe1: string;
+  public classEquipe2: string;
 
   public currentId: number;
   public id2: number;
   public id3: number;
   public id4: number;
   public currentMenes: Mene[] = [];
+  public currentEncheres: EnchereInfo[] = [];
 
   constructor(private activatedRoute: ActivatedRoute, private router: Router) {
   }
@@ -159,7 +179,7 @@ export class AppComponent implements OnInit {
           case 1:
           default:
             switch (this.currentContrat.playerId) {
-              case 1: this.positionJoueur = "est"; this.canAnnulerCarte = true; break;
+              case 1: this.positionJoueur = "est"; break;
               case 2: this.positionJoueur = "ouest"; break;
               case 3: this.positionJoueur = "sud"; break;
               case 4: this.positionJoueur = "nord"; break;
@@ -168,7 +188,7 @@ export class AppComponent implements OnInit {
           case 2:
             switch (this.currentContrat.playerId) {
               case 1: this.positionJoueur = "ouest"; break;
-              case 2: this.positionJoueur = "est"; this.canAnnulerCarte = true; break;
+              case 2: this.positionJoueur = "est"; break;
               case 3: this.positionJoueur = "nord"; break;
               case 4: this.positionJoueur = "sud"; break;
             }
@@ -177,7 +197,7 @@ export class AppComponent implements OnInit {
             switch (this.currentContrat.playerId) {
               case 1: this.positionJoueur = "nord"; break;
               case 2: this.positionJoueur = "sud"; break;
-              case 3: this.positionJoueur = "est"; this.canAnnulerCarte = true; break;
+              case 3: this.positionJoueur = "est"; break;
               case 4: this.positionJoueur = "ouest"; break;
             }
             break;
@@ -186,10 +206,12 @@ export class AppComponent implements OnInit {
               case 1: this.positionJoueur = "sud"; break;
               case 2: this.positionJoueur = "nord"; break;
               case 3: this.positionJoueur = "ouest"; break;
-              case 4: this.positionJoueur = "est"; this.canAnnulerCarte = true; break;
+              case 4: this.positionJoueur = "est"; break;
             }
             break;
         }
+        if (this.positionJoueur == "est")
+          this.canAnnulerCarte = true;
       }
     }
     this.posDepart.posX = '';
@@ -293,44 +315,45 @@ export class AppComponent implements OnInit {
     cardElt.style.transform = "translate3d(" + Math.trunc(transX) + "px, " + Math.trunc(transY) + "px, 0px)";
   }
 
-  public positionnePartance() {
-    var positionPartance: string;
-    switch (this.currentParticipant.id) {
+  //Positionne la partance et met l'enchere dessus
+  public positionnePartance(currentId: number, partanceId: number, enchere: number = 0, couleur?: string) {
+    this.partance = { posX: 0, posY: 0, valeur: '', couleur: '' };
+    switch (currentId) {
       case 1:
       default:
-        switch (this.currentContrat.partanceId) {
-          case 1: positionPartance = "sud"; break;
-          case 2: positionPartance = "nord"; break;
-          case 3: positionPartance = "ouest"; break;
-          case 4: positionPartance = "est"; break;
+        switch (partanceId) {
+          case 1: this.positionPartance = "sud"; break;
+          case 2: this.positionPartance = "nord"; break;
+          case 3: this.positionPartance = "ouest"; break;
+          case 4: this.positionPartance = "est"; break;
         }
         break;
       case 2:
-        switch (this.currentContrat.partanceId) {
-          case 1: positionPartance = "nord"; break;
-          case 2: positionPartance = "sud"; break;
-          case 3: positionPartance = "est"; break;
-          case 4: positionPartance = "ouest"; break;
+        switch (partanceId) {
+          case 1: this.positionPartance = "nord"; break;
+          case 2: this.positionPartance = "sud"; break;
+          case 3: this.positionPartance = "est"; break;
+          case 4: this.positionPartance = "ouest"; break;
         }
         break;
       case 3:
-        switch (this.currentContrat.partanceId) {
-          case 1: positionPartance = "est"; break;
-          case 2: positionPartance = "ouest"; break;
-          case 3: positionPartance = "sud"; break;
-          case 4: positionPartance = "nord"; break;
+        switch (partanceId) {
+          case 1: this.positionPartance = "est"; break;
+          case 2: this.positionPartance = "ouest"; break;
+          case 3: this.positionPartance = "sud"; break;
+          case 4: this.positionPartance = "nord"; break;
         }
         break;
       case 4:
-        switch (this.currentContrat.partanceId) {
-          case 1: positionPartance = "ouest"; break;
-          case 2: positionPartance = "est"; break;
-          case 3: positionPartance = "nord"; break;
-          case 4: positionPartance = "sud"; break;
+        switch (partanceId) {
+          case 1: this.positionPartance = "ouest"; break;
+          case 2: this.positionPartance = "est"; break;
+          case 3: this.positionPartance = "nord"; break;
+          case 4: this.positionPartance = "sud"; break;
         }
         break;
     }
-    switch (positionPartance) {
+    switch (this.positionPartance) {
       case "sud":
         this.partance.posX = (window.innerWidth * 0.25) - 100;
         this.partance.posY = (window.innerHeight * 0.75) - 150;
@@ -348,23 +371,11 @@ export class AppComponent implements OnInit {
         this.partance.posY = (window.innerHeight * 0.5) + 50;
         break;
     }
-    this.partance.valeur = this.currentContrat.value.substr(0, this.currentContrat.value.length - 1);
-    var couleur = this.currentContrat.value[this.currentContrat.value.length - 1];
-  switch (couleur) {
-    case "H":
-      this.partance.couleur = "coeur";
-      break;
-    case "S":
-      this.partance.couleur = "pique";
-      break;
-    case "C":
-      this.partance.couleur = "trefle";
-      break;
-    case "D":
-      this.partance.couleur = "carreau";
-      break;
+
+    if (enchere > 0)
+      this.partance.valeur = enchere.toString();
+    this.partance.couleur = UtilsHelper.couleurToValue(couleur);
   }
-}
 
   public getTotal1() {
     var total = 0;
@@ -386,6 +397,10 @@ export class AppComponent implements OnInit {
     var currentMene = this.currentContrat.menes[this.currentContrat.menes.length - 1];
     var value = currentMene.cards[currentMene.cards.length - 1].value;
     this.socket.emit("annulerDerniereCarte", { value: value, id: this.currentParticipant.id, partieId : this.partieId });
+  }
+
+  public onAnnulerEnchere() {
+    this.socket.emit("annulerDerniereEnchere", {  partieId: this.partieId });
   }
 
   public onResetPartie() {
@@ -412,7 +427,7 @@ export class AppComponent implements OnInit {
   }
 
   public onValidateEnchere() {
-    this.socket.emit("validateEnchere", { enchere: this.enchere + this.couleur, partieId : this.partieId });
+    this.socket.emit("validateEnchere", { enchere: this.enchere, couleur: this.couleur, enchereId: 0, partieId: this.partieId });
   }
 
   public onValidatePartance() {
@@ -491,7 +506,7 @@ export class AppComponent implements OnInit {
   }
 
   private refreshDesk() {
-    Utils.sleep(0).then(() => {
+    UtilsHelper.sleep(0).then(() => {
       if (this.isSpectateur)
         this.currentCards = this.currentContrat.cards[0];
       else
@@ -648,9 +663,9 @@ export class AppComponent implements OnInit {
       cardToMove.changePosition(posX, posY);
     });
 
-    this.socket.on("cardPlayed", currentPartie => {
-      this.currentPartie = currentPartie;
-      this.currentContrat = this.currentPartie.contrats[currentPartie.contrats.length - 1];
+    this.socket.on("cardPlayed", cardInfo => {
+      this.currentPartie = cardInfo.currentPartie;
+      this.currentContrat = this.currentPartie.contrats[this.currentPartie.contrats.length - 1];
       var currentMene = this.currentContrat.menes[this.currentContrat.menes.length - 1];
 
       //Dernière carte de la mène
@@ -666,7 +681,7 @@ export class AppComponent implements OnInit {
             this.currentMenes.push(new Mene(undefined, 0, 10));
         }
 
-        Utils.sleep(2000).then(() => {
+        UtilsHelper.sleep(2000).then(() => {
           //Suppression de toutes les cartes
           this.currentCards.splice(0, this.currentCards.length);
           this.currentCards2.splice(0, this.currentCards2.length);
@@ -678,7 +693,7 @@ export class AppComponent implements OnInit {
       }
       this.positionneJoueur();
       var lastCard = currentMene.cards[currentMene.cards.length - 1];
-      if (this.currentParticipant.id != lastCard.id) {
+      if (cardInfo.hasDblClick || this.currentParticipant.id != lastCard.id) {
         this.positionneCarte(lastCard)
         var cardToDrop = this.cardList.toArray().find(item => item.value == lastCard.value);
         cardToDrop.setVisible();
@@ -691,6 +706,9 @@ export class AppComponent implements OnInit {
 
       this.currentPartie = currentPartie;
       this.currentContrat = this.currentPartie.contrats[currentPartie.contrats.length - 1];
+
+      this.classEquipe1 = 'nomPlayer ' + (this.currentId == 1 || this.currentId == 2 ? 'equipe1' : 'equipe2');
+      this.classEquipe2 = 'nomPlayer ' + (this.currentId == 1 || this.currentId == 2 ? 'equipe2' : 'equipe1');
 
       //Participant courant
       this.currentParticipant = this.currentPartie.participants.find(item => item.nom == this.currentNom);
@@ -771,6 +789,7 @@ export class AppComponent implements OnInit {
       this.currentCards4 = [];
 
       this.currentMenes = [];
+      this.currentEncheres = [];
       this.lastMeneInfo = [new LastMeneInfo(), new LastMeneInfo(), new LastMeneInfo(), new LastMeneInfo()];
       this.partance = { posX: 0, posY: 0, couleur: '', valeur: "0" };
       this.couleur = '';
@@ -780,15 +799,94 @@ export class AppComponent implements OnInit {
 
       this.refreshDesk();
 
-      this.positionnePartance();
+      this.positionnePartance(this.currentParticipant.id, this.currentContrat.partanceId);
       this.positionneJoueur();
+      this.enchereId = this.currentContrat.partanceId;
+      this.encherePosition = this.positionPartance;
+      this.isEnchereVisible = true;
+      this.bestEnchereId = 0;
     });
 
-    this.socket.on("onEnchereValidate", currentPartie => {
+    this.socket.on("onValidatePartance", currentPartie => {
       this.currentPartie = currentPartie;
-      this.currentContrat = this.currentPartie.contrats[this.currentPartie.contrats.length - 1]
-      this.positionnePartance();
+      this.currentContrat = this.currentPartie.contrats[this.currentPartie.contrats.length - 1];
+      var enchere:number;
+      var couleur: string;
+      var value = this.currentContrat.value;
+      if (value) {
+        enchere = Number(value.substr(0, value.length - 1));
+        var couleur = value[value.length - 1];
+      }
+      this.positionnePartance(this.currentParticipant.id, this.currentContrat.partanceId, enchere, couleur);
       this.positionneJoueur();
+      this.enchereId = this.currentContrat.partanceId;
+      this.encherePosition = this.positionPartance;
+      this.isEnchereVisible = true;
+      this.bestEnchereId = 0;
+    });
+
+    this.socket.on("onValidateEnchere", infoEnchere => {
+      if (infoEnchere.enchere > 0) {
+        this.positionnePartance(this.currentParticipant.id, infoEnchere.partanceId, infoEnchere.enchere, infoEnchere.couleur);
+        this.enchere = Number(infoEnchere.enchere);
+        this.bestEnchereId = infoEnchere.enchereId;
+
+        if (this.enchere < 160) {
+          if (infoEnchere.enchereId) {
+            this.enchere = this.enchere + 10;
+            this.minEnchere = this.enchere;
+          }
+          else
+            this.isEnchereVisible = false;
+        }
+      }
+
+      this.enchereId = UtilsHelper.nextPlayer(infoEnchere.enchereId);
+      this.encherePosition = UtilsHelper.nextPosition(this.encherePosition);
+
+      if (infoEnchere.enchereId)
+        var nom = this.currentPartie.participants[infoEnchere.enchereId - 1].nom;
+      var isPasse: boolean = (infoEnchere.enchere == 0);
+      var img: string;
+      if (!isPasse)
+        img = "../assets/" + UtilsHelper.couleurToValue(infoEnchere.couleur) + ".png";
+
+      if (infoEnchere.enchereId) {
+        this.currentEncheres.push({ enchereId: infoEnchere.enchereId, nom: nom, enchere: infoEnchere.enchere, isPasse: isPasse, img: img });
+        //Savoir quand fini l'enchère
+        var lnEnchere = this.currentEncheres.length;
+        if (lnEnchere >= 4) {
+          if (this.currentEncheres[lnEnchere - 1].isPasse
+            && this.currentEncheres[lnEnchere - 2].isPasse
+            && this.currentEncheres[lnEnchere - 3].isPasse)
+            this.isEnchereVisible = false;
+        }
+        this.canAnnulerEnchere = false;
+        if (this.encherePosition == "est")
+          this.canAnnulerEnchere = true;
+      }
+    });
+
+    this.socket.on("onAnnulerDerniereEnchere", infoEnchere => {
+      this.canAnnulerEnchere = false;
+      if (this.currentEncheres.length > 1) {
+        for (var iEnchere = this.currentEncheres.length - 2; iEnchere >= 0; iEnchere--) {
+          if (this.currentEncheres[iEnchere].enchere > 0) {
+            this.enchere = this.currentEncheres[iEnchere].enchere + 10;
+            this.minEnchere = this.enchere;
+            break;
+          }
+        }
+      }
+      else {
+        this.enchere = 80;
+        this.minEnchere = this.enchere;
+      }
+
+      this.enchereId = UtilsHelper.previousPlayer(this.enchereId);
+      this.encherePosition = UtilsHelper.previousPosition(this.encherePosition);
+      this.currentEncheres.pop();
+      this.positionnePartance(this.currentParticipant.id, infoEnchere.partanceId, this.enchere, this.couleur);
     });
 
     this.socket.on("onAnnulerDerniereCarte", infoDerniereCarte => {

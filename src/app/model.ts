@@ -1,4 +1,4 @@
-import { Utils } from './Utils';
+import { UtilsHelper } from './UtilsHelper';
 
 export class Partie {
   public partieId: number; //L'id de partie
@@ -23,6 +23,7 @@ export class Contrat {
   }
   public partanceId: number; //Joueur ayant la partance
   public playerId: number; //Joueur actuel
+  public enchereId: number; //Joueur qui encherit
   public value: string; //Valeur du contrat
   public menes: Mene[]; //Les mènes
   public cards: string[][]; //La liste des cartes par participant
@@ -48,7 +49,7 @@ export class MeneCard {
 export class LastMeneInfo {
   constructor(index?: number, lastMene?: Mene, playerId?: number, participants?: Participant[]) {
     if (lastMene) {
-      this.imageCardPath = Utils.cardValueToImage(lastMene.cards[index].value, '');
+      this.imageCardPath = UtilsHelper.cardValueToImage(lastMene.cards[index].value, '');
       this.nom = participants.find(item => item.id == lastMene.cards[index].id).nom;
 
       if (playerId == lastMene.cards[index].id)
@@ -60,5 +61,13 @@ export class LastMeneInfo {
   public imageCardPath: string = '../assets/pi.png';
   public nom: string;
   public bestCardStyle: string;
+}
+
+export class EnchereInfo {
+  public enchereId: number;
+  public nom: string;
+  public enchere: number;
+  public isPasse: boolean;
+  public img: string;
 }
 

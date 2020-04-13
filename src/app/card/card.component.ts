@@ -1,6 +1,6 @@
 import { Component, OnInit, Input, Output, ElementRef, AfterViewInit } from '@angular/core';
 import { CdkDragStart, CdkDragMove, CdkDragExit, CdkDragEnter, CdkDragRelease, CdkDragEnd } from '@angular/cdk/drag-drop';
-import { Utils } from '../Utils';
+import { UtilsHelper } from '../UtilsHelper';
 
 @Component({
   selector: 'app-card',
@@ -35,7 +35,7 @@ export class CardComponent {
     if (this.isInvisible)
       this.setInVisible();
     else
-      this.cardPath = Utils.cardValueToImage(this.value, this.display);
+      this.cardPath = UtilsHelper.cardValueToImage(this.value, this.display);
   }
 
   public changePosition(posX:number, posY:number) {
@@ -48,10 +48,10 @@ export class CardComponent {
   }
 
   public setVisible() {
-    this.cardPath = Utils.cardValueToImage(this.value, this.display);
+    this.cardPath = UtilsHelper.cardValueToImage(this.value, this.display);
   }
   public setInVisible() {
-    this.cardPath = Utils.imgPath + "undefined_of_undefined" + (this.display == "card-rotate" ? "_rotate" : "") + ".png";
+    this.cardPath = UtilsHelper.imgPath + "undefined_of_undefined" + (this.display == "card-rotate" ? "_rotate" : "") + ".png";
   }
 
   onDragMoved(e: CdkDragMove) {
@@ -76,5 +76,10 @@ export class CardComponent {
     //newPos.top = Math.abs((positionY / window.innerHeight));
     //newPos.value = this.value;
     this.socket.emit("cardDropped", { value: this.value, partieId: this.partieId });
+  }
+
+  onDblClick() {
+    if (this.draggable)
+      this.socket.emit("cardDropped", { value: this.value, partieId: this.partieId, hasDblClick: true });
   }
 }
