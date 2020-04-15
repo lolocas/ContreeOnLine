@@ -173,6 +173,7 @@ Socketio.on("connection", socket => {
   });
 
   socket.on("resetCurrentPartie", nomInfo => {
+    currentCards = [];
     var currentPartie = getCurrentPartie(nomInfo.partieId);
 
     currentPartie = newPartie(nomInfo.partieId);
