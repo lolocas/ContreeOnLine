@@ -24,7 +24,7 @@ export class AppComponent implements OnInit {
   @Output()
   public positionPartance: string;
   @Input()
-  public partance: { posX: number, posY: number, valeur: string, couleur: string } = { posX: 0, posY: 0, valeur: '', couleur: '' };
+  public partance: { posX: number, posY: number, value: string, couleur: string, suit: string } = { posX: 0, posY: 0, value: '', couleur: '', suit: '' };
 
   @Input()
   @Output()
@@ -317,7 +317,7 @@ export class AppComponent implements OnInit {
 
   //Positionne la partance et met l'enchere dessus
   public positionnePartance(currentId: number, partanceId: number, enchere: number = 0, couleur?: string) {
-    this.partance = { posX: 0, posY: 0, valeur: '', couleur: '' };
+    this.partance = { posX: 0, posY: 0, value: '', couleur: '', suit : '' };
     switch (currentId) {
       case 1:
       default:
@@ -373,7 +373,8 @@ export class AppComponent implements OnInit {
     }
 
     if (enchere > 0)
-      this.partance.valeur = enchere.toString();
+      this.partance.value = enchere.toString();
+    this.partance.suit = couleur;
     this.partance.couleur = UtilsHelper.couleurToValue(couleur);
   }
 
@@ -505,7 +506,7 @@ export class AppComponent implements OnInit {
     }
   }
 
-  private refreshDesk() {
+  private refreshDeck() {
     UtilsHelper.sleep(0).then(() => {
       if (this.isSpectateur)
         this.currentCards = this.currentContrat.cards[0];
@@ -534,7 +535,7 @@ export class AppComponent implements OnInit {
           this.currentCards4 = this.currentContrat.cards[1];
           break;
       }
-    });
+    })
   }
 
   private navigate() {
@@ -667,6 +668,7 @@ export class AppComponent implements OnInit {
       this.currentPartie = cardInfo.currentPartie;
       this.currentContrat = this.currentPartie.contrats[this.currentPartie.contrats.length - 1];
       var currentMene = this.currentContrat.menes[this.currentContrat.menes.length - 1];
+      var firstCard: MeneCard = null;
 
       //Dernière carte de la mène
       if (currentMene.cards == undefined) {
@@ -688,16 +690,47 @@ export class AppComponent implements OnInit {
           this.currentCards3.splice(0, this.currentCards3.length);
           this.currentCards4.splice(0, this.currentCards4.length);
           //Rafraichissement des cartes
-          this.refreshDesk();
+          this.refreshDeck();
         });
       }
+      //On joue au moins une carte pour mettre en place le suggesteur de cartes
+      else if (this.currentContrat.cards.length >= 2)
+        firstCard = currentMene.cards[0];
+
       this.positionneJoueur();
+      //Au joueur connecté de jouer
+      if (this.positionJoueur == "sud" && firstCard) {
+        var l_lstCard = this.cardList.toArray().filter(item => item.id == this.currentId);
+        //Toutes les cartes jouables (après annulation de carte)
+        for (var l_intCard = 0; l_intCard < l_lstCard.length; l_intCard++) {
+          l_lstCard[l_intCard].setCardPlayable();
+        }
+        if (firstCard) {
+          //Vérification si le jeu contient la couleur de départ => Obligation de jouer une carte de cette couleur
+          if (l_lstCard.some(item => item.value[1] == firstCard.value[1])) {
+            for (var l_intCard = 0; l_intCard < l_lstCard.length; l_intCard++) {
+              if (l_lstCard[l_intCard].value[1] != firstCard.value[1])
+                l_lstCard[l_intCard].setCardUnplayable();
+            }
+          }
+          //Sinon vérification qu'il y'a de l'atout => Obligation de jouer l'atout
+          //else if (l_lstCard.some(item => item.value[1] == this.currentContrat.value[this.currentContrat.value.length - 1])) {
+          //  for (var l_intCard = 0; l_intCard < l_lstCard.length; l_intCard++) {
+          //    if (l_lstCard[l_intCard].value[1] != this.currentContrat.value[this.currentContrat.value.length - 1])
+          //      l_lstCard[l_intCard].setCardUnplayable();
+          //  }
+          //}
+        }
+      }
+
       var lastCard = currentMene.cards[currentMene.cards.length - 1];
       if (cardInfo.hasDblClick || this.currentParticipant.id != lastCard.id) {
         this.positionneCarte(lastCard)
         var cardToDrop = this.cardList.toArray().find(item => item.value == lastCard.value);
         cardToDrop.setVisible();
       }
+      else
+        this.cardList.toArray().find(item => item.value == lastCard.value).elRef.nativeElement.opacity = '1';
     });
 
     this.socket.on("onAddNom", currentPartie => {
@@ -707,8 +740,6 @@ export class AppComponent implements OnInit {
       this.currentPartie = currentPartie;
       this.currentContrat = this.currentPartie.contrats[currentPartie.contrats.length - 1];
 
-      this.classEquipe1 = 'nomPlayer ' + (this.currentId == 1 || this.currentId == 2 ? 'equipe1' : 'equipe2');
-      this.classEquipe2 = 'nomPlayer ' + (this.currentId == 1 || this.currentId == 2 ? 'equipe2' : 'equipe1');
 
       //Participant courant
       this.currentParticipant = this.currentPartie.participants.find(item => item.nom == this.currentNom);
@@ -717,6 +748,9 @@ export class AppComponent implements OnInit {
         this.currentId = this.currentParticipant.id;
       }
       this.positionneJoueur();
+
+      this.classEquipe1 = 'nomPlayer ' + (this.currentId == 1 || this.currentId == 2 ? 'equipe1' : 'equipe2');
+      this.classEquipe2 = 'nomPlayer ' + (this.currentId == 1 || this.currentId == 2 ? 'equipe2' : 'equipe1');
 
       var index2: number = 0;
       var index3: number = 0;
@@ -791,13 +825,13 @@ export class AppComponent implements OnInit {
       this.currentMenes = [];
       this.currentEncheres = [];
       this.lastMeneInfo = [new LastMeneInfo(), new LastMeneInfo(), new LastMeneInfo(), new LastMeneInfo()];
-      this.partance = { posX: 0, posY: 0, couleur: '', valeur: "0" };
+      this.partance = { posX: 0, posY: 0, couleur: '', value: "0", suit : '' };
       this.couleur = '';
       this.enchere = 80;
       this.currentPartie = currentPartie;
       this.currentContrat = this.currentPartie.contrats[this.currentPartie.contrats.length - 1];
 
-      this.refreshDesk();
+      this.refreshDeck();
 
       this.positionnePartance(this.currentParticipant.id, this.currentContrat.partanceId);
       this.positionneJoueur();
@@ -852,7 +886,7 @@ export class AppComponent implements OnInit {
         img = "../assets/" + UtilsHelper.couleurToValue(infoEnchere.couleur) + ".png";
 
       if (infoEnchere.enchereId) {
-        this.currentEncheres.push({ enchereId: infoEnchere.enchereId, nom: nom, enchere: infoEnchere.enchere, isPasse: isPasse, img: img });
+        this.currentEncheres.push({ enchereId: infoEnchere.enchereId, nom: nom, enchere: infoEnchere.enchere, couleur: infoEnchere.couleur, isPasse: isPasse, img: img });
         //Savoir quand fini l'enchère
         var lnEnchere = this.currentEncheres.length;
         if (lnEnchere >= 4) {
@@ -872,6 +906,7 @@ export class AppComponent implements OnInit {
       if (this.currentEncheres.length > 1) {
         for (var iEnchere = this.currentEncheres.length - 2; iEnchere >= 0; iEnchere--) {
           if (this.currentEncheres[iEnchere].enchere > 0) {
+            this.couleur = this.currentEncheres[iEnchere].couleur;
             this.enchere = this.currentEncheres[iEnchere].enchere + 10;
             this.minEnchere = this.enchere;
             break;

@@ -50,7 +50,7 @@
     <img src="../assets/sontour.png" class="sontour-{{positionJoueur}}" />
   </div>
   <div style="position: fixed;left:{{partance.posX}}px;top:{{partance.posY}}px;">
-    <div class="infoSurImage" style="bottom:30px;right:30px;">{{partance.valeur}}</div>
+    <div class="infoSurImage" style="bottom:30px;right:30px;">{{partance.value}}</div>
     <img src="../assets/dealer.png" style="width: 150px" />
     <img src="../assets/{{partance.couleur}}.png" style="position: absolute;left: 25px;top: 25px;" *ngIf="partance.couleur" />
   </div>
@@ -87,7 +87,8 @@
   <div style="position: fixed;right: 0;bottom: 0;left: -200px;">
     <div style="position:absolute;left:calc(50% - 50px);top:-70px;" [class]="classEquipe1 + ' ' + (currentId == bestEnchereId ? ' enchereIdColor' : '')">{{nom1}}</div>
     <div style="margin-bottom:20px; justify-content: center !important; display: flex !important;">
-      <app-card *ngFor="let card of currentCards; index as iCard" [value]=card [id]="currentId" [socket]="socket" display="card-draggable" [partieId]="partieId"
+      <app-card *ngFor="let card of currentCards; index as iCard" [value]=card [id]="currentId" [socket]="socket"
+                display="card-draggable" [partieId]="partieId" [couleurEnchere]="partance.suit" [enchereId]="bestEnchereId"
                 [draggable]="positionJoueur=='sud' && !isSpectateur" [ngStyle]="rotationCard(iCard, 'sud')"></app-card>
     </div>
   </div>
@@ -117,7 +118,7 @@
     </div>
     <!--Volet d'administration-->
     <div style="bottom:0;position:absolute;" *ngIf="isAdmin">
-      <div>Version 1.1.5</div>
+      <div>Version 1.2.0</div>
       <button (click)="onResetPartie()" class="btn btn-danger btn-lg btn-block">Reset partie</button>
       <button (click)="onResetContrat()" class="btn btn-warning btn-lg btn-block">Reset contrat</button>
       <button style="margin-bottom:100px" (click)="onNewContrat()" class="btn btn-success btn-lg btn-block">Nouveau contrat</button>

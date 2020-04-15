@@ -67,6 +67,7 @@ export class EnchereInfo {
   public enchereId: number;
   public nom: string;
   public enchere: number;
+  public couleur: string;
   public isPasse: boolean;
   public img: string;
 }

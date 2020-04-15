@@ -1,9 +1,13 @@
 <div class="{{display}}" [id]="value"
      (dblclick)="onDblClick()"
+     (mouseenter)="onMouseEnter()" (mouseleave)="onMouseLeave()"
      cdkDrag
      (cdkDragMoved)="onDragMoved($event)" (cdkDragEnded)="onDragEnded($event)"
      [cdkDragDisabled]="!draggable"
      [cdkDragFreeDragPosition]="dragPosition"
      [ngStyle]="{'opacity': (display != 'card-draggable' || draggable) ? '1' : '0.7' }">
   <img [src]="cardPath" style="width:145px" (dblclick)="onDblClick">
+  <span *ngIf="socket && couleur==couleurEnchere" [class]="classAtout"
+        style="height: 20px;width: 20px;position:absolute;
+  top:-10px;left:-10px;border-radius: 50%;display: inline-block;"></span>
 </div>
