@@ -828,6 +828,7 @@ export class AppComponent implements OnInit {
       this.partance = { posX: 0, posY: 0, couleur: '', value: "0", suit : '' };
       this.couleur = '';
       this.enchere = 80;
+      this.minEnchere = 80;
       this.currentPartie = currentPartie;
       this.currentContrat = this.currentPartie.contrats[this.currentPartie.contrats.length - 1];
 
