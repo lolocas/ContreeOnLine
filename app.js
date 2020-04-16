@@ -11,26 +11,6 @@ Http.listen(PORT, () => {
 var listePartie = [];
 var nbTour = 4; //4
 var cards = ['7H', '7S', '7D', '7C', '8H', '8S', '8D', '8C', '9H', '9S', '9D', '9C', '0C', '0H', '0S', '0D', 'JH', 'JS', 'JD', 'JC', 'QH', 'QS', 'QD', 'QC', 'KH', 'KS', 'KD', 'KC', 'AC', 'AH', 'AS', 'AD'];
-var currentCards = [];
-//var currentPartie = {
-//  partieId: 0,
-//  departId: 0,
-//  nbTour: nbTour,
-//  participants: [],
-//  contrats: [{
-//    partanceId : 1,
-//    playerId: 1,
-//    value: '',
-//    initCards : [],
-//    cards: [],
-//    menes: [{
-//      cards: undefined,
-//      total1: 0,
-//      total2: 0
-//    }]
-//  }]
-//};
-
 
 Socketio.on("connection", socket => {
   socket.on('joinRoom', function (room) {
@@ -38,7 +18,7 @@ Socketio.on("connection", socket => {
   });
   socket.on("addNom", nomInfo => {
     var currentPartie = getCurrentPartie(nomInfo.partieId);
-    //console.log("Connect",currentPartie);
+    console.log("Connect",currentPartie);
     if (currentPartie) {
       addNom(currentPartie, nomInfo);
       Socketio.in(nomInfo.partieId).emit("onAddNom", currentPartie);
@@ -52,10 +32,10 @@ Socketio.on("connection", socket => {
     }
     lastPartieId = lastPartieId + 1;
     var currentPartie = newPartie(lastPartieId);
+    TirageCarte(currentPartie.contrats[0]);
 
     listePartie.push(currentPartie);
     addNom(currentPartie, nomInfo);
-    //console.log("creerPartie", listePartie);
     Socketio.emit("onCreerPartie", lastPartieId);
   })
 
@@ -173,11 +153,24 @@ Socketio.on("connection", socket => {
   });
 
   socket.on("resetCurrentPartie", nomInfo => {
-    currentCards = [];
     var currentPartie = getCurrentPartie(nomInfo.partieId);
-
-    currentPartie = newPartie(nomInfo.partieId);
-
+    currentPartie.datePartie = new Date();
+    currentPartie.participants = [];
+    currentPartie.contrats = [{
+      partanceId: 1,
+      playerId: 1,
+      enchereId: 1,
+      value: '',
+      initCards: [],
+      cards: [],
+      menes: [{
+        cards: undefined,
+        total1: 0,
+        total2: 0
+      }]
+    }];
+    TirageCarte(currentPartie.contrats[0]);
+    console.log("resetCurrentPartie", listePartie);
     addNom(currentPartie, nomInfo);
     Socketio.in(nomInfo.partieId).emit("onNewContrat", currentPartie);
   });
@@ -217,13 +210,7 @@ Socketio.on("connection", socket => {
       }]
     };
 
-    var sortedCards = cards.sort(function () { return 0.5 - Math.random() });
-    for (var numParticipant = 1; numParticipant <= 4; numParticipant++) {
-      var newCards = SortCards(sortedCards.slice(0, 8));
-      newContrat.initCards.push(newCards.slice(0));
-      newContrat.cards.push(newCards.slice(0)); //Clonage
-      sortedCards = sortedCards.slice(8);
-    }   
+    TirageCarte(newContrat);
 
     currentPartie.contrats.push(newContrat);
     Socketio.in(info.partieId).emit("onNewContrat", currentPartie);
@@ -231,10 +218,6 @@ Socketio.on("connection", socket => {
 });
 
 function addNom(currentPartie, nomInfo) {
-  console.log("AddNom", currentPartie);
-  if (nomInfo.isAdmin && currentCards.length == 0) {
-    currentCards = cards.sort(function () { return 0.5 - Math.random() });
-  }
   if (!currentPartie.participants.find(item => item.nom == nomInfo.nom)) {
     var participant = {
       nom: nomInfo.nom,
@@ -243,15 +226,12 @@ function addNom(currentPartie, nomInfo) {
     }
     if (currentPartie.participants.length <= 3) {
       currentPartie.participants.push(participant);
-      var newCards = SortCards(currentCards.slice(0, 8));
-      currentPartie.contrats[currentPartie.contrats.length - 1].initCards.push(newCards.slice(0));
-      currentPartie.contrats[currentPartie.contrats.length - 1].cards.push(newCards.slice(0)); //Clonage
-      currentCards = currentCards.slice(8);
     }
     else {
       participant.isSpectateur = true;
       currentPartie.participants.push(participant);
     }
+    console.log("addNom", currentPartie.datePartie);
   }
 }
 
@@ -372,4 +352,14 @@ function newPartie(partieId) {
 
 function getCurrentPartie(partieId) {
   return listePartie.find(item => item.partieId == partieId);
+}
+
+function TirageCarte(newContrat) {
+  var sortedCards = cards.sort(function () { return 0.5 - Math.random() });
+  for (var numParticipant = 1; numParticipant <= 4; numParticipant++) {
+    var newCards = SortCards(sortedCards.slice(0, 8));
+    newContrat.initCards.push(newCards.slice(0));
+    newContrat.cards.push(newCards.slice(0)); //Clonage
+    sortedCards = sortedCards.slice(8);
+  }
 }
