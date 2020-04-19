@@ -26,8 +26,8 @@
     </div>
   </div>
 
-  <div style="position: fixed;right:200px;top:0px;" *ngIf="hasSpectateur">
-    <img src="../assets/spectateur.png" />
+  <div style="position: fixed;right:200px;top:0px;z-index:10" *ngIf="hasSpectateur">
+    <img src="../assets/spectateur.png" [title]="ListeSpectateur" />
   </div>
 
   <div style="position: fixed;left:0px;top:0px;">
@@ -55,7 +55,8 @@
     <img src="../assets/{{partance.couleur}}.png" style="position: absolute;left: 25px;top: 25px;" *ngIf="partance.couleur" />
   </div>
 
-  <app-enchere [encherePosition]="encherePosition" [enchereId]="enchereId" [(enchere)]="enchere" [minEnchere]="minEnchere" [(couleur)]="couleur" [socket]="socket" [partieId]="partieId" *ngIf="isEnchereVisible"></app-enchere>
+  <app-enchere [encherePosition]="encherePosition" [enchereId]="enchereId" [(enchere)]="enchere" [minEnchere]="minEnchere"
+               [(couleur)]="couleur" [socket]="socket" [partieId]="partieId" *ngIf="isEnchereVisible"></app-enchere>
 
   <div style="position: fixed;right: 0;top: 0;left: -200px;">
     <div style="justify-content: center!important;display: flex!important;">
@@ -85,11 +86,13 @@
   </div>
 
   <div style="position: fixed;right: 0;bottom: 0;left: -200px;">
-    <div style="position:absolute;left:calc(50% - 50px);top:-70px;" [class]="classEquipe1 + ' ' + (currentId == bestEnchereId ? ' enchereIdColor' : '')">{{nom1}}</div>
+    <div style="position:absolute;left:calc(50% - 50px);top:-70px;" [class]="classEquipe1 + ' ' + (currentId == bestEnchereId ? ' enchereIdColor' : '')">{{nom1}}
+    <img *ngIf="isConnected" src="../assets/connected.png" />
+    <img *ngIf="!isConnected" src="../assets/disconnected.png" /></div>
     <div style="margin-bottom:20px; justify-content: center !important; display: flex !important;">
       <app-card *ngFor="let card of currentCards; index as iCard" [value]=card [id]="currentId" [socket]="socket"
                 display="card-draggable" [partieId]="partieId" [couleurEnchere]="partance.suit" [enchereId]="bestEnchereId"
-                [draggable]="positionJoueur=='sud' && !isSpectateur" [ngStyle]="rotationCard(iCard, 'sud')"></app-card>
+                [draggable]="positionJoueur=='sud' && !isSpectateur && canPlayCard" [ngStyle]="rotationCard(iCard, 'sud')"></app-card>
     </div>
   </div>
   <button style="right: 250px;bottom: 30px;position: fixed;" (click)="onAnnulerCarte()" class="btn btn-info" [disabled]="!canAnnulerCarte" *ngIf="!isEnchereVisible">Annuler la carte</button>
@@ -106,8 +109,8 @@
       <div style="width:100px;font-size:small;font-weight: bold;">{{equipeNom2}}</div>
     </div>
     <div *ngFor="let mene of currentMenes" style="display:flex">
-      <div style="width:100px">{{mene.total1}}</div>
-      <div style="width:100px">{{mene.total2}}</div>
+      <div style="width:100px" [class]="mene.total1 > 0 ? 'equipe1':'equipe2'">{{mene.total1}}</div>
+      <div style="width:100px" [class]="mene.total1 > 0 ? 'equipe1':'equipe2'">{{mene.total2}}</div>
     </div>
     <div style="display:flex;border:1px solid black">
       <div style="width:100px">Total: {{ getTotal1() }}</div>
@@ -118,13 +121,15 @@
     </div>
     <!--Volet d'administration-->
     <div style="bottom:0;position:absolute;" *ngIf="isAdmin">
-      <div>Version 1.2.0</div>
+      <div>Version 1.2.1</div>
       <button (click)="onResetPartie()" class="btn btn-danger btn-lg btn-block">Reset partie</button>
       <button (click)="onResetContrat()" class="btn btn-warning btn-lg btn-block">Reset contrat</button>
       <button style="margin-bottom:100px" (click)="onNewContrat()" class="btn btn-success btn-lg btn-block">Nouveau contrat</button>
       <div>
         <label for="spinner">Enchère:</label>
         <input type="number" min="80" max="160" step="10" [(ngModel)]="enchere" (change)="onValidateEnchere()" />
+        <label style="font-size:x-small">Sans enchère</label>
+        <input type="checkbox" style="margin-left:5px" [(ngModel)]="isSansEnchere" (change)="onValidateSansEnchere()"/>
       </div>
       <label>
         <input type="radio" name="radCouleur" value="H" [(ngModel)]="couleur" (change)="onValidateEnchere()">

@@ -5,6 +5,7 @@ export class Partie {
   public departId: number; //L'id de celui qui a le départ
   public datePartie: Date;
   public nbTour: number; //Nombre de tour de cartes (4)
+  public isSansEnchere: boolean;
   public participants: Array<Participant>; //La liste des participants
   public contrats: Array<Contrat>; //La liste des contrats
 }
@@ -51,11 +52,14 @@ export class LastMeneInfo {
     if (lastMene) {
       this.imageCardPath = UtilsHelper.cardValueToImage(lastMene.cards[index].value, '');
       this.nom = participants.find(item => item.id == lastMene.cards[index].id).nom;
-
-      if (playerId == lastMene.cards[index].id)
-        this.bestCardStyle = 'bestCard';
+      if (playerId == lastMene.cards[index].id) {
+        if (playerId <= 2 || playerId > 4)
+          this.bestCardStyle = 'equipe1';
+        else
+          this.bestCardStyle = 'equipe2';
+      }
       else
-        this.bestCardStyle = '';
+        this.bestCardStyle = 'neutre';
     }
   }
   public imageCardPath: string = '../assets/pi.png';
@@ -70,5 +74,11 @@ export class EnchereInfo {
   public couleur: string;
   public isPasse: boolean;
   public img: string;
+}
+
+export class InfoPartie {
+  public partie: Partie;
+  public contrat: Contrat;
+  public hasDblClick: boolean;
 }
 

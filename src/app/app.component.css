@@ -44,6 +44,14 @@ input:focus {
   box-shadow: 0 0 0 0 !important;
 }
 
+.equipe1 {
+  background-color: lightskyblue;
+}
+
+.equipe2 {
+  background-color: lightgreen;
+}
+
 .nomPlayer {
   width: 100px;
   text-align: center;
@@ -52,14 +60,6 @@ input:focus {
   border-radius: 25px;
   font-weight: bold;
 }
-
-  .nomPlayer.equipe1 {
-    background-color: lightskyblue;
-  }
-
-  .nomPlayer.equipe2 {
-    background-color: lightgreen;
-  }
 
   .nomPlayer.enchereIdColor {
     color: darkorange;
@@ -82,12 +82,11 @@ input:focus {
   z-index: 10;
   position: absolute;
   font-weight: bold;
-  background-color: white;
 }
 
-  .infoSurImage.bestCard {
-    background-color: red;
-  }
+.neutre {
+  background-color: white;
+}
 
 /* HIDE RADIO */
 [type=radio] {

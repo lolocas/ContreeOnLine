@@ -2,9 +2,10 @@ import { Component, ViewChild, ViewChildren, ElementRef, OnInit, QueryList, View
 import { Router, ActivatedRoute, Params } from '@angular/router';
 import io from "socket.io-client";
 import { CardComponent } from './card/card.component';
-import { Participant, Partie, Mene, Contrat, MeneCard, LastMeneInfo, EnchereInfo } from './model';
+import { Participant, Partie, Mene, Contrat, MeneCard, LastMeneInfo, EnchereInfo, InfoPartie } from './model';
 import { UtilsHelper } from './UtilsHelper';
 import { environment } from 'src/environments/environment';
+import { Title } from '@angular/platform-browser';
 
 @Component({
     selector: 'app-root',
@@ -41,6 +42,10 @@ export class AppComponent implements OnInit {
   public isEnchereVisible: boolean;
   @Output()
   public canAnnulerEnchere: boolean;
+  @Output()
+  public isSansEnchere: boolean = false;
+  @Output()
+  public canPlayCard: boolean = true;
 
   @Input()
   public couleur: string;
@@ -53,6 +58,10 @@ export class AppComponent implements OnInit {
 
   @Output()
   public socket: any;
+  @Output()
+  public isConnected: boolean = false;
+  @Output()
+  public isReconnected: boolean = true;
   @Output()
   public isAdmin: boolean = false;
   @Output()
@@ -67,6 +76,8 @@ export class AppComponent implements OnInit {
   public isSpectateur: boolean = false;
   @Output()
   public infoParties: any[] = [];
+  @Output()
+  public hasSpectateur: boolean;
 
   public currentPartie: Partie;
   private currentContrat: Contrat;
@@ -82,7 +93,7 @@ export class AppComponent implements OnInit {
   public nom2: string;
   public nom3: string;
   public nom4: string;
-  public hasSpectateur: boolean;
+  public ListeSpectateur: string[] = [];
 
   public equipeNom1: string;
   public equipeNom2: string;
@@ -96,7 +107,7 @@ export class AppComponent implements OnInit {
   public currentMenes: Mene[] = [];
   public currentEncheres: EnchereInfo[] = [];
 
-  constructor(private activatedRoute: ActivatedRoute, private router: Router) {
+  constructor(private activatedRoute: ActivatedRoute, private router: Router, private titleService: Title) {
   }
 
   public ngOnInit() {
@@ -107,8 +118,10 @@ export class AppComponent implements OnInit {
       if (params['nom'] || params['admin']) {
         if (params['admin'])
           this.isAdmin = (params['admin'] == 'true');
-        if (params['nom'])
+        if (params['nom']) {
           this.currentNom = params['nom'];
+          this.titleService.setTitle("ContreeOnLine - " + this.currentNom);
+        }
         if (params['partieId']) {
           this.partieId = Number(params['partieId']);
           this.hasPartieId = true;
@@ -130,13 +143,33 @@ export class AppComponent implements OnInit {
         this.socket.emit('getAllPartie');
       }
     });
+
+    this.socket.on('connect', () => {
+      this.isConnected = true;
+      this.isReconnected = false;
+      console.log("Connexion");
+    });
+    this.socket.on('disconnect', () => {
+      this.isConnected = false;
+      this.isReconnected = false;
+      this.infoParties = [];
+      this.hasSelectPartieId = false;
+      this.hasPartieId = false;
+      console.log("Déconnexion");
+    });
+    this.socket.on('reconnect', () => {
+      console.log("Reconnexion");
+      this.isReconnected = true;
+      if (this.partieId > 0)
+        this.socket.emit('joinRoom', this.partieId);
+    })
   }
 
   public positionneJoueur() {
     this.positionJoueur = "sud";
     this.canAnnulerCarte = false;
     //On démarre la mène
-    if (this.currentContrat && this.currentContrat.menes[this.currentContrat.menes.length - 1].cards == undefined) {
+    if (this.currentParticipant && this.currentContrat && this.currentContrat.menes[this.currentContrat.menes.length - 1].cards == undefined) {
       switch (this.currentParticipant.id) {
         case 1:
         default:
@@ -435,6 +468,10 @@ export class AppComponent implements OnInit {
     this.socket.emit("validatePartance", { id: Number(this.partanceId), partieId : this.partieId });
   }
 
+  public onValidateSansEnchere() {
+    this.socket.emit("validateSansEnchere", { isSansEnchere: this.isSansEnchere, partieId: this.partieId });
+  }
+
   public onCreerPartie() {
     if (!this.currentNom) {
       alert("Veuillez renseigner un nom");
@@ -449,6 +486,7 @@ export class AppComponent implements OnInit {
       alert("Veuillez renseigner un nom");
       return;
     }
+    this.hasPartieId = true;
     this.partieId = this.selectPartieId;
     this.socket.emit('addNom', { nom: this.currentNom, isAdmin: false, partieId: this.partieId });
     this.navigate();
@@ -557,13 +595,19 @@ export class AppComponent implements OnInit {
   }
 
   public ngAfterViewInit() {
-    this.socket.on("onCreerPartie", partieId => {
-      if (this.isAdmin && (this.partieId == 0 || this.partieId == null)) {
-        this.partieId = partieId;
-
+    this.socket.on("onCreerPartie", (partieId: number) => {
+      if (this.isAdmin) {
         this.navigate();
-        this.socket.emit('joinRoom', this.partieId);
+        if ((this.partieId == 0 || this.partieId == null)) {
+          this.partieId = partieId;
+
+          this.socket.emit('joinRoom', this.partieId);
+        }
+        else
+          this.hasPartieId = true;
       }
+      else
+        this.socket.emit('getAllPartie');
     });
 
     this.socket.on("onPartieExists", value => {
@@ -664,14 +708,16 @@ export class AppComponent implements OnInit {
       cardToMove.changePosition(posX, posY);
     });
 
-    this.socket.on("cardPlayed", cardInfo => {
-      this.currentPartie = cardInfo.currentPartie;
-      this.currentContrat = this.currentPartie.contrats[this.currentPartie.contrats.length - 1];
+    this.socket.on("onCardPlayed", (infoPartie: InfoPartie) => {
+      this.currentPartie = infoPartie.partie;
+      this.currentContrat = infoPartie.contrat;
       var currentMene = this.currentContrat.menes[this.currentContrat.menes.length - 1];
       var firstCard: MeneCard = null;
 
       //Dernière carte de la mène
       if (currentMene.cards == undefined) {
+        this.canPlayCard = false;
+
         currentMene = this.currentContrat.menes[this.currentContrat.menes.length - 2];
         this.fillLastMenInfo(currentMene);
         this.currentMenes.push(currentMene);
@@ -683,7 +729,7 @@ export class AppComponent implements OnInit {
             this.currentMenes.push(new Mene(undefined, 0, 10));
         }
 
-        UtilsHelper.sleep(2000).then(() => {
+        UtilsHelper.sleep(1500).then(() => {
           //Suppression de toutes les cartes
           this.currentCards.splice(0, this.currentCards.length);
           this.currentCards2.splice(0, this.currentCards2.length);
@@ -691,6 +737,7 @@ export class AppComponent implements OnInit {
           this.currentCards4.splice(0, this.currentCards4.length);
           //Rafraichissement des cartes
           this.refreshDeck();
+          this.canPlayCard = true;
         });
       }
       //On joue au moins une carte pour mettre en place le suggesteur de cartes
@@ -724,7 +771,7 @@ export class AppComponent implements OnInit {
       }
 
       var lastCard = currentMene.cards[currentMene.cards.length - 1];
-      if (cardInfo.hasDblClick || this.currentParticipant.id != lastCard.id) {
+      if (infoPartie.hasDblClick || this.currentParticipant.id != lastCard.id) {
         this.positionneCarte(lastCard)
         var cardToDrop = this.cardList.toArray().find(item => item.value == lastCard.value);
         cardToDrop.setVisible();
@@ -733,24 +780,24 @@ export class AppComponent implements OnInit {
         this.cardList.toArray().find(item => item.value == lastCard.value).elRef.nativeElement.opacity = '1';
     });
 
-    this.socket.on("onAddNom", currentPartie => {
+    this.socket.on("onAddNom", (infoPartie: InfoPartie) => {
+      this.canPlayCard = true;
       this.nom1 = this.currentNom;
       this.hasSpectateur = false;
 
-      this.currentPartie = currentPartie;
-      this.currentContrat = this.currentPartie.contrats[currentPartie.contrats.length - 1];
-
+      this.currentPartie = infoPartie.partie;
+      this.currentContrat = infoPartie.contrat;
 
       //Participant courant
       this.currentParticipant = this.currentPartie.participants.find(item => item.nom == this.currentNom);
       if (this.currentParticipant) {
-        this.currentCards = this.currentPartie.contrats[this.currentPartie.contrats.length - 1].cards[this.currentParticipant.id - 1];
+        this.currentCards = this.currentContrat.cards[this.currentParticipant.id - 1];
         this.currentId = this.currentParticipant.id;
       }
       this.positionneJoueur();
 
-      this.classEquipe1 = 'nomPlayer ' + (this.currentId == 1 || this.currentId == 2 ? 'equipe1' : 'equipe2');
-      this.classEquipe2 = 'nomPlayer ' + (this.currentId == 1 || this.currentId == 2 ? 'equipe2' : 'equipe1');
+      this.classEquipe1 = 'nomPlayer ' + (this.currentId <= 2 || this.currentId > 4 ? 'equipe1' : 'equipe2');
+      this.classEquipe2 = 'nomPlayer ' + (this.currentId <= 2 || this.currentId > 4 ? 'equipe2' : 'equipe1');
 
       var index2: number = 0;
       var index3: number = 0;
@@ -777,7 +824,7 @@ export class AppComponent implements OnInit {
             index2 = 2;
             index3 = 0;
             index4 = 1;
-            break;          
+            break;
         }
         //Spectateur
         if (this.currentParticipant.id > 4) {
@@ -791,7 +838,11 @@ export class AppComponent implements OnInit {
         }
         else if (this.currentPartie.participants[this.currentPartie.participants.length - 1].isSpectateur) {
           this.hasSpectateur = true;
-          alert("Le spectateur " + this.currentPartie.participants[this.currentPartie.participants.length - 1].nom + " se connecte");
+          var nomSpectateur = this.currentPartie.participants[this.currentPartie.participants.length - 1].nom;
+          if (this.ListeSpectateur.indexOf(nomSpectateur) < 0) {
+            this.ListeSpectateur.push(nomSpectateur);
+            alert("Le spectateur " + this.currentPartie.participants[this.currentPartie.participants.length - 1].nom + " se connecte");
+          }
         }
         if (this.currentPartie.participants.length > index2) {
           this.currentCards2 = this.currentContrat.cards[index2];
@@ -808,14 +859,14 @@ export class AppComponent implements OnInit {
           this.nom4 = this.currentPartie.participants[index4].nom;
           this.id4 = this.currentPartie.participants[index4].id;
         }
-        if (this.currentPartie.participants.length>= 4) {
+        if (this.currentPartie.participants.length >= 4) {
           this.equipeNom1 = this.currentPartie.participants[0].nom + ' ' + this.currentPartie.participants[1].nom;
           this.equipeNom2 = this.currentPartie.participants[2].nom + ' ' + this.currentPartie.participants[3].nom;
         }
       }
     });
 
-    this.socket.on("onNewContrat", currentPartie => {
+    this.socket.on("onNewContrat", (infoPartie: InfoPartie) => {
 
       this.currentCards = [];
       this.currentCards2 = [];
@@ -829,8 +880,8 @@ export class AppComponent implements OnInit {
       this.couleur = '';
       this.enchere = 80;
       this.minEnchere = 80;
-      this.currentPartie = currentPartie;
-      this.currentContrat = this.currentPartie.contrats[this.currentPartie.contrats.length - 1];
+      this.currentPartie = infoPartie.partie;
+      this.currentContrat = infoPartie.contrat;
 
       this.refreshDeck();
 
@@ -838,13 +889,14 @@ export class AppComponent implements OnInit {
       this.positionneJoueur();
       this.enchereId = this.currentContrat.partanceId;
       this.encherePosition = this.positionPartance;
-      this.isEnchereVisible = true;
+      this.isEnchereVisible = !this.isSansEnchere;
       this.bestEnchereId = 0;
     });
 
-    this.socket.on("onValidatePartance", currentPartie => {
-      this.currentPartie = currentPartie;
-      this.currentContrat = this.currentPartie.contrats[this.currentPartie.contrats.length - 1];
+    this.socket.on("onValidatePartance", (infoPartie: InfoPartie) => {
+      this.canPlayCard = true;
+      this.currentPartie = infoPartie.partie;
+      this.currentContrat = infoPartie.contrat;
       var enchere:number;
       var couleur: string;
       var value = this.currentContrat.value;
@@ -856,8 +908,13 @@ export class AppComponent implements OnInit {
       this.positionneJoueur();
       this.enchereId = this.currentContrat.partanceId;
       this.encherePosition = this.positionPartance;
-      this.isEnchereVisible = true;
+      this.isEnchereVisible = !this.isSansEnchere;
       this.bestEnchereId = 0;
+    });
+
+    this.socket.on("onValidateSansEnchere", isSansEnchere => {
+      this.isSansEnchere = isSansEnchere;
+      this.isEnchereVisible = !this.isSansEnchere;
     });
 
     this.socket.on("onValidateEnchere", infoEnchere => {
@@ -926,6 +983,7 @@ export class AppComponent implements OnInit {
     });
 
     this.socket.on("onAnnulerDerniereCarte", infoDerniereCarte => {
+      this.canPlayCard = true;
       this.currentPartie = infoDerniereCarte.currentPartie;
       this.currentContrat = this.currentPartie.contrats[infoDerniereCarte.currentPartie.contrats.length - 1];
       var cardToMove = this.cardList.toArray().find(item => item.value == infoDerniereCarte.value.value);

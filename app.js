@@ -16,14 +16,15 @@ Socketio.on("connection", socket => {
   socket.on('joinRoom', function (room) {
     socket.join(room);
   });
+
   socket.on("addNom", nomInfo => {
     var currentPartie = getCurrentPartie(nomInfo.partieId);
-    console.log("Connect",currentPartie);
+    console.log("Connect", currentPartie);
     if (currentPartie) {
       addNom(currentPartie, nomInfo);
-      Socketio.in(nomInfo.partieId).emit("onAddNom", currentPartie);
+      Socketio.in(nomInfo.partieId).emit("onAddNom", getInfoPartie(currentPartie));
     }
-  })
+  });
 
   socket.on("creerPartie", nomInfo => {
     var lastPartieId = 0;
@@ -37,17 +38,17 @@ Socketio.on("connection", socket => {
     listePartie.push(currentPartie);
     addNom(currentPartie, nomInfo);
     Socketio.emit("onCreerPartie", lastPartieId);
-  })
+  });
 
   socket.on("getAllPartie", () => {
     var infoParties = [];
-    
+
     listePartie.forEach(element => {
       infoParties.push({ partieId: element.partieId, datePartie: element.datePartie, participants: element.participants });
     });
-    
+
     Socketio.emit("onGetAllPartie", infoParties);
-  })
+  });
 
   socket.on("partieExists", value => {
     var currentPartie = getCurrentPartie(value.partieId);
@@ -59,7 +60,7 @@ Socketio.on("connection", socket => {
       }
     }
     Socketio.emit("onPartieExists", value);
-  })
+  });
 
   socket.on("deletePartie", value => {
     var currentPartie = getCurrentPartie(value.partieId);
@@ -72,12 +73,13 @@ Socketio.on("connection", socket => {
     });
 
     Socketio.emit("onGetAllPartie", infoParties);
-  })
+  });
 
   socket.on("moveCard", NewPos => {
     //console.log(NewPos);
     socket.to(NewPos.partieId).emit("onMoveCard", NewPos);
-  })
+  });
+
   socket.on("cardDropped", value => {
     var currentPartie = getCurrentPartie(value.partieId);
     if (currentPartie == undefined) {
@@ -107,8 +109,13 @@ Socketio.on("connection", socket => {
       currentContrat.menes.push({ cards: undefined, total1: 0, total2: 0 });
     }
     //console.log(currentPartie);
-    Socketio.in(value.partieId).emit("cardPlayed", { currentPartie: currentPartie, hasDblClick: value.hasDblClick });
-  })
+
+    var infoPartie = getInfoPartie(currentPartie);
+    infoPartie.hasDblClick = value.hasDblClick;
+
+    Socketio.in(value.partieId).emit("onCardPlayed", infoPartie);
+  });
+
   socket.on("validateEnchere", enchere => {
     var currentPartie = getCurrentPartie(enchere.partieId);
     var currentContrat = currentPartie.contrats[currentPartie.contrats.length - 1];
@@ -117,7 +124,7 @@ Socketio.on("connection", socket => {
       currentContrat.value = enchere.enchere + enchere.couleur;
     currentContrat.enchereId = enchere.enchereId;
     Socketio.in(enchere.partieId).emit("onValidateEnchere", { partanceId: currentContrat.partanceId, enchereId: enchere.enchereId, enchere: enchere.enchere, couleur: enchere.couleur });
-  })
+  });
 
   socket.on("validatePartance", partance => {
     var currentPartie = getCurrentPartie(partance.partieId);
@@ -128,8 +135,16 @@ Socketio.on("connection", socket => {
     var currentContrat = currentPartie.contrats[currentPartie.contrats.length - 1];
     currentContrat.partanceId = partance.id;
     currentContrat.playerId = partance.id;
-    Socketio.in(partance.partieId).emit("onValidatePartance", currentPartie);
-  })
+    Socketio.in(partance.partieId).emit("onValidatePartance", getInfoPartie(currentPartie));
+  });
+
+  socket.on("validateSansEnchere", infoSansEnchere => {
+    var currentPartie = getCurrentPartie(infoSansEnchere.partieId);
+    currentPartie.isSansEnchere = infoSansEnchere.isSansEnchere;
+    console.log("validateSansEnchere", infoSansEnchere);
+    Socketio.in(infoSansEnchere.partieId).emit("onValidateSansEnchere", infoSansEnchere.isSansEnchere);
+  });
+
   socket.on("annulerDerniereCarte", value => {
     var currentPartie = getCurrentPartie(value.partieId);
     console.log("annulerDerniereCarte", value);
@@ -144,7 +159,7 @@ Socketio.on("connection", socket => {
     }
     currentPartie.contrats[currentPartie.contrats.length - 1].playerId = newPlayerId;
     Socketio.in(value.partieId).emit("onAnnulerDerniereCarte", { currentPartie: currentPartie, value: value });
-  })
+  });
 
   socket.on("annulerDerniereEnchere", enchere => {
     var currentPartie = getCurrentPartie(enchere.partieId);
@@ -172,8 +187,9 @@ Socketio.on("connection", socket => {
     TirageCarte(currentPartie.contrats[0]);
     console.log("resetCurrentPartie", listePartie);
     addNom(currentPartie, nomInfo);
-    Socketio.in(nomInfo.partieId).emit("onNewContrat", currentPartie);
+    Socketio.in(nomInfo.partieId).emit("onNewContrat", getInfoPartie(currentPartie));
   });
+
   socket.on("resetCurrentContrat", info => {
     var currentPartie = getCurrentPartie(info.partieId);
     var currentContrat = currentPartie.contrats[currentPartie.contrats.length - 1];
@@ -191,8 +207,9 @@ Socketio.on("connection", socket => {
       total1: 0,
       total2: 0
     }];
-    Socketio.in(info.partieId).emit("onNewContrat", currentPartie);
+    Socketio.in(info.partieId).emit("onNewContrat", getInfoPartie(currentPartie));
   });
+
   socket.on("newContrat", info => {
     var currentPartie = getCurrentPartie(info.partieId);
     var newPlayer = nextPlayer(currentPartie.contrats[currentPartie.contrats.length - 1].partanceId);
@@ -213,7 +230,7 @@ Socketio.on("connection", socket => {
     TirageCarte(newContrat);
 
     currentPartie.contrats.push(newContrat);
-    Socketio.in(info.partieId).emit("onNewContrat", currentPartie);
+    Socketio.in(info.partieId).emit("onNewContrat", getInfoPartie(currentPartie));
   });
 });
 
@@ -338,7 +355,7 @@ function newPartie(partieId) {
       partanceId: 1,
       playerId: 1,
       enchereId:1,
-      value: '',
+      isSansEnchere : false,
       initCards: [],
       cards: [],
       menes: [{
@@ -361,5 +378,18 @@ function TirageCarte(newContrat) {
     newContrat.initCards.push(newCards.slice(0));
     newContrat.cards.push(newCards.slice(0)); //Clonage
     sortedCards = sortedCards.slice(8);
+  }
+}
+
+function getInfoPartie(currentPartie) {
+  return {
+    partie: {
+      partieId: currentPartie.partieId,
+      departId: currentPartie.departId,
+      datePartie: currentPartie.datePartie,
+      nbTour: currentPartie.nbTour,
+      participants: currentPartie.participants
+    },
+    contrat: currentPartie.contrats[currentPartie.contrats.length - 1]
   }
 }
