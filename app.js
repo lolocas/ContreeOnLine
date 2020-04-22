@@ -12,6 +12,10 @@ var listePartie = [];
 var nbTour = 4; //4
 var cards = ['7H', '7S', '7D', '7C', '8H', '8S', '8D', '8C', '9H', '9S', '9D', '9C', '0C', '0H', '0S', '0D', 'JH', 'JS', 'JD', 'JC', 'QH', 'QS', 'QD', 'QC', 'KH', 'KS', 'KD', 'KC', 'AC', 'AH', 'AS', 'AD'];
 
+
+var channels = {};
+
+
 Socketio.on("connection", socket => {
   socket.on('joinRoom', function (room) {
     socket.join(room);
@@ -232,6 +236,23 @@ Socketio.on("connection", socket => {
     currentPartie.contrats.push(newContrat);
     Socketio.in(info.partieId).emit("onNewContrat", getInfoPartie(currentPartie));
   });
+
+
+  var initiatorChannel = '';
+
+  socket.on('new-channel', function (data) {
+    if (!channels[data.channel]) {
+      initiatorChannel = data.channel;
+    }
+
+    channels[data.channel] = data.channel;
+    onNewNamespace(data.channel, data.sender);
+  });
+
+
+
+
+
 });
 
 function addNom(currentPartie, nomInfo) {
@@ -392,4 +413,32 @@ function getInfoPartie(currentPartie) {
     },
     contrat: currentPartie.contrats[currentPartie.contrats.length - 1]
   }
+}
+
+
+
+function onNewNamespace(channel, sender) {
+  console.log('onNewNamespace', channel, sender);
+  Socketio.of('/' + channel).on('connection', function (socket) {
+    var username;
+    if (Socketio.isConnected) {
+      Socketio.isConnected = false;
+      socket.emit('connect', true);
+    }
+
+    socket.on('message', function (data) {
+      if (data.sender == sender) {
+        if (!username) username = data.data.sender;
+        console.log('message', data.data);
+        socket.broadcast.emit('message', data.data);
+      }
+    });
+
+    socket.on('disconnect', function () {
+      if (username) {
+        socket.broadcast.emit('user-left', username);
+        username = null;
+      }
+    });
+  });
 }

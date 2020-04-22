@@ -26,6 +26,11 @@
     </div>
   </div>
 
+  <div id="videos-container1" style="position:absolute;top:500px;height: 200px;width: 200px;background-color: red;"></div>
+
+  <div id="videos-container2" style="position:absolute;top:150px;height: 200px;width: 200px;background-color: blue;"></div>
+
+
   <div style="position: fixed;right:200px;top:0px;z-index:10" *ngIf="hasSpectateur">
     <img src="../assets/spectateur.png" [title]="ListeSpectateur" />
   </div>
@@ -52,7 +57,7 @@
   <div style="position: fixed;left:{{partance.posX}}px;top:{{partance.posY}}px;">
     <div class="infoSurImage" style="bottom:30px;right:30px;">{{partance.value}}</div>
     <img src="../assets/dealer.png" style="width: 150px" />
-    <img src="../assets/{{partance.couleur}}.png" style="position: absolute;left: 25px;top: 25px;" *ngIf="partance.couleur" />
+    <img src="../assets/{{partance.couleur}}.png" style="position: absolute; left: 25px; top: 25px;" *ngIf="partance.couleur" />
   </div>
 
   <app-enchere [encherePosition]="encherePosition" [enchereId]="enchereId" [(enchere)]="enchere" [minEnchere]="minEnchere"
@@ -86,9 +91,11 @@
   </div>
 
   <div style="position: fixed;right: 0;bottom: 0;left: -200px;">
-    <div style="position:absolute;left:calc(50% - 50px);top:-70px;" [class]="classEquipe1 + ' ' + (currentId == bestEnchereId ? ' enchereIdColor' : '')">{{nom1}}
-    <img *ngIf="isConnected" src="../assets/connected.png" />
-    <img *ngIf="!isConnected" src="../assets/disconnected.png" /></div>
+    <div style="position:absolute;left:calc(50% - 50px);top:-70px;" [class]="classEquipe1 + ' ' + (currentId == bestEnchereId ? ' enchereIdColor' : '')">
+      {{nom1}}
+      <img *ngIf="isConnected" src="../assets/connected.png" />
+      <img *ngIf="!isConnected" src="../assets/disconnected.png" />
+    </div>
     <div style="margin-bottom:20px; justify-content: center !important; display: flex !important;">
       <app-card *ngFor="let card of currentCards; index as iCard" [value]=card [id]="currentId" [socket]="socket"
                 display="card-draggable" [partieId]="partieId" [couleurEnchere]="partance.suit" [enchereId]="bestEnchereId"
@@ -129,7 +136,7 @@
         <label for="spinner">Enchère:</label>
         <input type="number" min="80" max="160" step="10" [(ngModel)]="enchere" (change)="onValidateEnchere()" />
         <label style="font-size:x-small">Sans enchère</label>
-        <input type="checkbox" style="margin-left:5px" [(ngModel)]="isSansEnchere" (change)="onValidateSansEnchere()"/>
+        <input type="checkbox" style="margin-left:5px" [(ngModel)]="isSansEnchere" (change)="onValidateSansEnchere()" />
       </div>
       <label>
         <input type="radio" name="radCouleur" value="H" [(ngModel)]="couleur" (change)="onValidateEnchere()">

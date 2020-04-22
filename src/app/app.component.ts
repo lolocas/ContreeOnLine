@@ -6,6 +6,9 @@ import { Participant, Partie, Mene, Contrat, MeneCard, LastMeneInfo, EnchereInfo
 import { UtilsHelper } from './UtilsHelper';
 import { environment } from 'src/environments/environment';
 import { Title } from '@angular/platform-browser';
+declare function getMediaElement(video: any, options:any);
+declare function conference(config: any): any;
+declare function getUserMedia(options);
 
 @Component({
     selector: 'app-root',
@@ -864,6 +867,9 @@ export class AppComponent implements OnInit {
           this.equipeNom2 = this.currentPartie.participants[2].nom + ' ' + this.currentPartie.participants[3].nom;
         }
       }
+
+
+      this.gestionCamera();
     });
 
     this.socket.on("onNewContrat", (infoPartie: InfoPartie) => {
@@ -994,4 +1000,201 @@ export class AppComponent implements OnInit {
       }
     })
   }
+
+
+
+
+  private gestionCamera() {
+    var partieId = this.partieId;
+    var currentId = this.currentId;
+    var config: any = {
+      // via: https://github.com/muaz-khan/WebRTC-Experiment/tree/master/socketio-over-nodejs
+      openSocket: function (config) {
+        var SIGNALING_SERVER = 'https://socketio-over-nodejs2.herokuapp.com:443/'; //environment.socketIoUrl + '/'; //// 
+
+        config.channel = 'partie' + partieId; //config.channel || location.href.replace(/\/|:|#|%|\.|\[|\]/g, '');
+        var sender = Math.round(Math.random() * 999999999) + 999999999;
+
+        io.connect(SIGNALING_SERVER).emit('new-channel', {
+          channel: config.channel,
+          sender: sender
+        });
+
+        var socket = io.connect(SIGNALING_SERVER + config.channel);
+        socket.channel = config.channel;
+        socket.on('connect', function () {
+          if (config.callback) config.callback(socket);
+        });
+
+        socket.send = function (message) {
+          socket.emit('message', {
+            sender: sender,
+            data: message
+          });
+        };
+
+        socket.on('message', config.onmessage);
+      },
+      onRemoteStream: function (media) {
+        var mediaElement = getMediaElement(media.video, {
+          width: videosContainer1.clientWidth,
+          buttons: ['mute-audio', 'mute-video', 'full-screen', 'volume-slider']
+        });
+        mediaElement.id = media.stream.streamid;
+        if (currentId == 1 && videosContainer2.children.length == 0)
+          videosContainer2.appendChild(mediaElement);
+        if (currentId == 2 && videosContainer1.children.length == 0)
+          videosContainer1.appendChild(mediaElement);
+      },
+      onRemoteStreamEnded: function (stream, video) {
+        if (video.parentNode && video.parentNode.parentNode && video.parentNode.parentNode.parentNode) {
+          video.parentNode.parentNode.parentNode.removeChild(video.parentNode.parentNode);
+        }
+      },
+      onRoomFound: function (room) {
+        var alreadyExist = document.querySelector('button[data-broadcaster="' + room.broadcaster + '"]');
+        if (alreadyExist) return;
+
+        captureUserMedia(function () {
+          conferenceUI.joinRoom({
+            roomToken: room.roomToken,
+            joinUser: room.broadcaster
+          });
+        }, function () {
+        });
+      },
+      onRoomClosed: function (room) {
+        var joinButton = document.querySelector('button[data-roomToken="' + room.roomToken + '"]');
+        if (joinButton) {
+          // joinButton.parentNode === <li>
+          // joinButton.parentNode.parentNode === <td>
+          // joinButton.parentNode.parentNode.parentNode === <tr>
+          // joinButton.parentNode.parentNode.parentNode.parentNode === <table>
+          joinButton.parentNode.parentNode.parentNode.parentNode.removeChild(joinButton.parentNode.parentNode.parentNode);
+        }
+      },
+      onReady: function () {
+        console.log('now you can open or join rooms');
+      }
+    };
+
+    function captureUserMedia(callback, failure_callback) {
+      var video = document.createElement('video');
+      video.muted = true;
+      video.volume = 0;
+
+      try {
+        video.setAttributeNode(document.createAttribute('autoplay'));
+        video.setAttributeNode(document.createAttribute('playsinline'));
+        video.setAttributeNode(document.createAttribute('controls'));
+      } catch (e) {
+        video.setAttribute('autoplay', 'true');
+        video.setAttribute('playsinline', 'true');
+        video.setAttribute('controls', 'true');
+      }
+
+      getUserMedia({
+        video: video,
+        onsuccess: function (stream) {
+          config.attachStream = stream;
+
+          var mediaElement = getMediaElement(video, {
+            width: videosContainer1.clientWidth,
+            buttons: ['mute-audio', 'mute-video', 'full-screen', 'volume-slider']
+          });
+          mediaElement.toggle('mute-audio');
+
+          if (currentId == 1 && videosContainer1.children.length == 0)
+            videosContainer1.appendChild(mediaElement);
+          if (currentId == 2 && videosContainer2.children.length == 0)
+            videosContainer2.appendChild(mediaElement);
+
+          callback && callback();
+        },
+        onerror: function () {
+          alert('unable to get access to your webcam');
+          callback && callback();
+        }
+      });
+    }
+
+    var conferenceUI: any = conference(config);
+
+    /* UI specific */
+    var videosContainer1 = document.getElementById('videos-container1');
+    var videosContainer2 = document.getElementById('videos-container2');
+
+    if (this.isAdmin) {
+      captureUserMedia(function () {
+        conferenceUI.createRoom({
+          roomName: 'partie' + partieId
+        });
+      }, function () {
+      });
+    }
+    else {
+      //captureUserMedia(function () {
+      //  conferenceUI.joinRoom({
+      //    roomToken: roomToken,
+      //    joinUser: broadcaster
+      //  });
+      //}, function () {
+      //});
+    }
+
+
+  /*  captureUserMedia(function () {
+      conferenceUI.joinRoom({
+        roomToken: "84738ad6-d7a7-d9d9-d0ae-5ea125021306",
+        joinUser: "d633f51f-e340-71b-1abb-1e6383d4ca9a"
+      });
+    }, function () {
+    });*/
+
+
+    (function () {
+      var uniqueToken = document.getElementById('unique-token');
+      /*  if (uniqueToken)
+          if (location.hash.length > 2) uniqueToken.parentNode.parentNode.parentNode.innerHTML = '<h2 style="text-align:center;display: block;"><a href="' + location.href + '" target="_blank">Right click to copy & share this private link</a></h2>';
+          else uniqueToken.innerHTML = uniqueToken.parentNode.parentNode.href = '#' + (Math.random() * new Date().getTime()).toString(36).toUpperCase().replace(/\./g, '-');
+  */
+    })();
+
+    function scaleVideos() {
+      var videos = document.querySelectorAll('video'),
+        length = videos.length, video;
+
+      var minus = 130;
+      var windowHeight = 700;
+      var windowWidth = 600;
+      var windowAspectRatio = windowWidth / windowHeight;
+      var videoAspectRatio = 4 / 3;
+      var blockAspectRatio;
+      var tempVideoWidth = 0;
+      var maxVideoWidth = 0;
+
+      for (var i = length; i > 0; i--) {
+        blockAspectRatio = i * videoAspectRatio / Math.ceil(length / i);
+        if (blockAspectRatio <= windowAspectRatio) {
+          tempVideoWidth = videoAspectRatio * windowHeight / Math.ceil(length / i);
+        } else {
+          tempVideoWidth = windowWidth / i;
+        }
+        if (tempVideoWidth > maxVideoWidth)
+          maxVideoWidth = tempVideoWidth;
+      }
+      for (var i = 0; i < length; i++) {
+        video = videos[i];
+        if (video)
+          video.width = maxVideoWidth - minus;
+      }
+    }
+
+    window.onresize = scaleVideos;
+  }
+
+
+
+
+
 }
