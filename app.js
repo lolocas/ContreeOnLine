@@ -91,12 +91,18 @@ Socketio.on("connection", socket => {
       return;
     }
     var currentContrat = currentPartie.contrats[currentPartie.contrats.length - 1];
+
+    if (!currentContrat.initCards[value.id - 1].includes(value.value)) {
+      console.log("cardDropped erreur", value);
+      return;
+    }
+
     if (currentContrat.menes[currentContrat.menes.length - 1].cards == undefined)
       currentContrat.menes[currentContrat.menes.length - 1].cards = [];
     else
       currentContrat.playerId = nextPlayer(currentContrat.playerId);
 
-    currentContrat.menes[currentContrat.menes.length - 1].cards.push({ id: currentContrat.playerId, value: value.value });
+    currentContrat.menes[currentContrat.menes.length - 1].cards.push({ id: value.id, value: value.value });
 
     //Nouvelle mène
     if (currentContrat.menes[currentContrat.menes.length - 1].cards.length == nbTour) {
@@ -110,9 +116,9 @@ Socketio.on("connection", socket => {
         currentContrat.cards[currentCard.id - 1].splice(currentContrat.cards[currentCard.id - 1].indexOf(currentCard.value), 1);
       }
       //nouvelle mène
-      currentContrat.menes.push({ cards: undefined, total1: 0, total2: 0 });
+      currentContrat.menes.push({ playerId: currentContrat.playerId, cards: undefined, total1: 0, total2: 0 });
     }
-    //console.log(currentPartie);
+    //console.log("cardDropped", currentPartie);
 
     var infoPartie = getInfoPartie(currentPartie);
     infoPartie.hasDblClick = value.hasDblClick;
@@ -137,8 +143,10 @@ Socketio.on("connection", socket => {
       return;
     }
     var currentContrat = currentPartie.contrats[currentPartie.contrats.length - 1];
+    var currentMene = currentContrat.menes[currentContrat.menes.length - 1];
     currentContrat.partanceId = partance.id;
     currentContrat.playerId = partance.id;
+    currentMene.playerId = partance.id;
     Socketio.in(partance.partieId).emit("onValidatePartance", getInfoPartie(currentPartie));
   });
 
@@ -183,6 +191,7 @@ Socketio.on("connection", socket => {
       initCards: [],
       cards: [],
       menes: [{
+        playerId: 0,
         cards: undefined,
         total1: 0,
         total2: 0
@@ -207,11 +216,39 @@ Socketio.on("connection", socket => {
     currentContrat.playerId = currentContrat.partanceId;
 
     currentContrat.menes = [{
+      playerId: 0,
       cards: undefined,
       total1: 0,
       total2: 0
     }];
     Socketio.in(info.partieId).emit("onNewContrat", getInfoPartie(currentPartie));
+  });
+
+
+  socket.on("resetMene", info => {
+    var currentPartie = getCurrentPartie(info.partieId);
+    var currentContrat = currentPartie.contrats[currentPartie.contrats.length - 1];
+
+    var currentMene = currentContrat.menes[currentContrat.menes.length - 1];
+    if (currentMene.cards == undefined) { //Nouvelle même on regarde la mène précédente
+      if (currentContrat.menes.length == 1) //Une seule mène vide on sort
+        return;
+      currentContrat.menes.splice(-1, 1); //Suppression de la mène vide
+      currentMene = currentContrat.menes[currentContrat.menes.length - 1];
+      //On remet les cartes jouées
+      for (var intTour = 0; intTour < currentMene.cards.length; intTour++) {
+        var currentCard = currentMene.cards[intTour];
+        currentContrat.cards[currentCard.id - 1].push(currentCard.value);
+        SortCards(currentContrat.cards[currentCard.id - 1]);
+      }
+    }
+    currentContrat.playerId = currentMene.playerId;
+    currentContrat.menes.splice(-1, 1); //Suppression de la mène
+    //nouvelle mène
+    currentContrat.menes.push({ playerId: currentContrat.playerId, cards: undefined, total1: 0, total2: 0 });
+    console.log("resetMene", currentContrat.menes);
+
+    Socketio.in(info.partieId).emit("onResetMene", getInfoPartie(currentPartie));
   });
 
   socket.on("newContrat", info => {
@@ -225,6 +262,7 @@ Socketio.on("connection", socket => {
       initCards: [],
       cards: [],
       menes: [{
+        playerId: newPlayer,
         cards: undefined,
         total1: 0,
         total2: 0
@@ -237,22 +275,10 @@ Socketio.on("connection", socket => {
     Socketio.in(info.partieId).emit("onNewContrat", getInfoPartie(currentPartie));
   });
 
-
-  var initiatorChannel = '';
-
   socket.on('new-channel', function (data) {
-    if (!channels[data.channel]) {
-      initiatorChannel = data.channel;
-    }
-
     channels[data.channel] = data.channel;
     onNewNamespace(data.channel, data.sender);
   });
-
-
-
-
-
 });
 
 function addNom(currentPartie, nomInfo) {
@@ -309,6 +335,10 @@ function SortCards(cards) {
 }
 
 function calculMene(currentContrat, currentMene) {
+  if (!currentContrat.value) {
+    console.log("calculMene", "Pas d'atout défini");
+    return;
+  }
   var suitAtout = currentContrat.value[currentContrat.value.length - 1];
   var lstCardValue = [["7", 0, 0], ["8", 0, 0], ["9", 0, 14], ["0", 10, 10], ["J", 2, 20], ["Q", 3, 3], ["K", 4, 4], ["A", 11, 11]];
   var listeCardInfo = [];
@@ -380,6 +410,7 @@ function newPartie(partieId) {
       initCards: [],
       cards: [],
       menes: [{
+        playerId: 0,
         cards: undefined,
         total1: 0,
         total2: 0

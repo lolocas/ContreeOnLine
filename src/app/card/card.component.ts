@@ -119,12 +119,12 @@ export class CardComponent {
     //newPos.left = Math.abs((positionX / window.innerWidth));
     //newPos.top = Math.abs((positionY / window.innerHeight));
     //newPos.value = this.value;
-    this.socket.emit("cardDropped", { value: this.value, partieId: this.partieId });
+    this.socket.emit("cardDropped", { id : this.id, value: this.value, partieId: this.partieId });
   }
 
   onDblClick() {
     if (this.draggable)
-      this.socket.emit("cardDropped", { value: this.value, partieId: this.partieId, hasDblClick: true });
+      this.socket.emit("cardDropped", { id: this.id, value: this.value, partieId: this.partieId, hasDblClick: true });
   }
 
   onMouseEnter() {

@@ -40,6 +40,7 @@ export class Mene {
   public cards: MeneCard[]; //Les cartes jouées de la mène
   public total1: number; //Le total de l'équipe 1
   public total2: number; //Le total de l'équipe 2
+  public playerId: number; //Joueur qui commence la mène
 }
 
 export class MeneCard {

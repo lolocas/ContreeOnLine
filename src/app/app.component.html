@@ -22,8 +22,8 @@
       <div class="text-center">
         <div style="margin-right:10px;" class="btn btn-primary" *ngIf="isAdmin" (click)="onCreerPartie()">Créer une partie</div>
         <div class="btn btn-primary" *ngIf="hasSelectPartieId" (click)="onJoinPartie()">Rejoindre la partie {{selectPartieId}}</div>
-        <input type="checkbox" style="margin-left:5px" [(ngModel)]="isWebcam" />
-        <label style="color:white">Avec webcam</label>
+        <input type="checkbox" style="margin-left:5px" [(ngModel)]="isWebcam" *ngIf="hasSelectPartieId"/>
+        <label style="color:white" *ngIf="hasSelectPartieId">Avec webcam</label>
       </div>
     </div>
   </div>
@@ -49,13 +49,15 @@
     <div class="infoSurImage {{lastMeneInfo[3].bestCardStyle}}" style="top:80px">{{lastMeneInfo[3].nom}}</div>
   </div>
   <div style="position: fixed;left:{{posDepart.posX}};top:{{posDepart.posY}};">
+    <div [class]="'counter ' + positionJoueur">00:{{counter}}</div>
     <img src="../assets/sontour.png" class="sontour-{{positionJoueur}}" />
   </div>
-  <div style="position: fixed;left:{{partance.posX}}px;top:{{partance.posY}}px;">
-    <div class="infoSurImage" style="bottom:30px;right:30px;">{{partance.value}}</div>
-    <img src="../assets/dealer.png" style="width: 150px" />
-    <img src="../assets/{{partance.couleur}}.png" style="position: absolute;left: 25px;top: 25px;" *ngIf="partance.couleur" />
-  </div>
+  <div style="position: fixed;left:{{partance.posX
+      }}px;top:{{partance.posY}}px;">
+      <div class="infoSurImage" style="bottom:30px;right:30px;">{{partance.value}}</div>
+      <img src="../assets/dealer.png" style="width: 150px" />
+      <img src="../assets/{{partance.couleur}}.png" style="position: absolute;left: 25px;top: 25px;" *ngIf="partance.couleur" />
+    </div>
 
   <app-enchere [encherePosition]="encherePosition" [enchereId]="enchereId" [(enchere)]="enchere" [minEnchere]="minEnchere"
                [(couleur)]="couleur" [socket]="socket" [partieId]="partieId" *ngIf="isEnchereVisible"></app-enchere>
@@ -80,7 +82,11 @@
   <div style="top: 0;right: 360px;bottom: 0;position: fixed;">
     <div style="position: relative;top: 50%;transform: translateY(-50%);" [class]="classEquipe2 + ' ' + (id4 == bestEnchereId ? ' enchereIdColor' : '')">{{nom4}}</div>
   </div>
-  <div style="top: 0;right: 200px;bottom: 0;position: fixed;">
+  <div style="    top: 0;
+    right: 200px;
+    bottom: 0;
+    position: fixed;
+">
     <div style="position: relative;top: 50%;transform: translateY(-50%);">
       <!--style="display: inline-grid;align-items: center;text-align: center;"-->
       <app-card *ngFor="let card of currentCards4" [value]=card [id]="id4" display="card-rotate" [isInvisible]="!isCardVisible" [partieId]="partieId"></app-card>
@@ -123,15 +129,16 @@
     </div>
     <!--Volet d'administration-->
     <div style="bottom:0;position:absolute;" *ngIf="isAdmin">
-      <div>Version 1.2.1</div>
+      <div>Version 1.3.0</div>
       <button (click)="onResetPartie()" class="btn btn-danger btn-lg btn-block">Reset partie</button>
       <button (click)="onResetContrat()" class="btn btn-warning btn-lg btn-block">Reset contrat</button>
+      <button (click)="onResetMene()" class="btn btn-primary btn-lg btn-block">Reset mène</button>
       <button style="margin-bottom:100px" (click)="onNewContrat()" class="btn btn-success btn-lg btn-block">Nouveau contrat</button>
       <div>
         <label for="spinner">Enchère:</label>
         <input type="number" min="80" max="160" step="10" [(ngModel)]="enchere" (change)="onValidateEnchere()" />
         <label style="font-size:x-small">Sans enchère</label>
-        <input type="checkbox" style="margin-left:5px" [(ngModel)]="isSansEnchere" (change)="onValidateSansEnchere()"/>
+        <input type="checkbox" style="margin-left:5px" [(ngModel)]="isSansEnchere" (change)="onValidateSansEnchere()" />
       </div>
       <label>
         <input type="radio" name="radCouleur" value="H" [(ngModel)]="couleur" (change)="onValidateEnchere()">

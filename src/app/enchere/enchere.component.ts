@@ -48,6 +48,11 @@ export class EnchereComponent implements OnInit {
   @Input()
   public socket: any;
 
+  @Output()
+  public counter: number = 59;
+  private interval: any;
+
+
   private _enchereId: number;
   @Input()
   set enchereId(value: number) {
@@ -75,6 +80,7 @@ export class EnchereComponent implements OnInit {
     this.couleur = '';
     this.encherePosition = UtilsHelper.nextPosition(this.encherePosition);
     this.enchereId = UtilsHelper.nextPlayer(this.enchereId);
+    clearInterval(this.interval);
   }
 
   public onPasser() {
@@ -82,6 +88,7 @@ export class EnchereComponent implements OnInit {
     this.couleur = '';
     this.encherePosition = UtilsHelper.nextPosition(this.encherePosition);
     this.enchereId = UtilsHelper.nextPlayer(this.enchereId);
+    clearInterval(this.interval);
   }
 
   public getPositionDepart(position: string) {
@@ -104,6 +111,17 @@ export class EnchereComponent implements OnInit {
         posDepart.posY = "calc(50% - 150px)";
         break;
     }
+
+    clearInterval(this.interval);
+    this.counter = 59;
+    var formModel = this;
+    this.interval = setInterval(function () {
+      if (formModel.counter == 0)
+        clearInterval(formModel.interval);
+      else
+        formModel.counter--;
+    }, 1000);
+
     return posDepart;
   }
 }

@@ -84,6 +84,32 @@ input:focus {
   font-weight: bold;
 }
 
+.counter {
+  z-index: 1;
+  position: absolute;
+
+}
+
+  .counter.sud {
+    top: 20px;
+    left: 44px;
+  }
+
+  .counter.nord {
+    top: 40px;
+    left: 44px;
+  }
+
+  .counter.ouest {
+    top: 32px;
+    left: 50px;
+  }
+
+  .counter.est {
+    top: 32px;
+    left: 30px;
+  }
+
 .neutre {
   background-color: white;
 }

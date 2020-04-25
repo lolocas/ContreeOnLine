@@ -83,6 +83,9 @@ export class AppComponent implements OnInit {
   public infoParties: any[] = [];
   @Output()
   public hasSpectateur: boolean;
+  @Output()
+  public counter: number = 59;
+  private interval: any;
 
   public currentPartie: Partie;
   private currentContrat: Contrat;
@@ -461,6 +464,12 @@ export class AppComponent implements OnInit {
     }
   }
 
+  public onResetMene() {
+    if (confirm('Confirmez-vous le reset de la mène ?')) {
+      this.socket.emit("resetMene", { partieId: this.partieId });
+    }
+  }
+
   public onNewContrat() {
     if (confirm('Confirmez-vous la création d\'un nouveau contrat ?')) {
       this.socket.emit("newContrat", { partieId: this.partieId });
@@ -599,7 +608,7 @@ export class AppComponent implements OnInit {
   }
 
 
-  private fillLastMenInfo(lastMene: Mene) {
+  private fillLastMeneInfo(lastMene: Mene) {
     this.lastMeneInfo = [new LastMeneInfo(), new LastMeneInfo(), new LastMeneInfo(), new LastMeneInfo()];
     this.lastMeneInfo[0] = new LastMeneInfo(0, lastMene, this.currentContrat.playerId, this.currentPartie.participants);
     this.lastMeneInfo[1] = new LastMeneInfo(1, lastMene, this.currentContrat.playerId, this.currentPartie.participants);
@@ -732,7 +741,7 @@ export class AppComponent implements OnInit {
         this.canPlayCard = false;
 
         currentMene = this.currentContrat.menes[this.currentContrat.menes.length - 2];
-        this.fillLastMenInfo(currentMene);
+        this.fillLastMeneInfo(currentMene);
         this.currentMenes.push(currentMene);
 
         if (this.currentMenes.length == 8) { //Dernière carte du contrat on rajoute le 10 de der
@@ -791,6 +800,16 @@ export class AppComponent implements OnInit {
       }
       else
         this.cardList.toArray().find(item => item.value == lastCard.value).elRef.nativeElement.opacity = '1';
+
+      clearInterval(this.interval);
+      this.counter = 59;
+      var formModel = this;
+      this.interval = setInterval(function () {
+        if (formModel.counter == 0)
+          clearInterval(formModel.interval);
+        else
+          formModel.counter--;
+      }, 1000);
     });
 
     this.socket.on("onAddNom", (infoPartie: InfoPartie) => {
@@ -877,9 +896,6 @@ export class AppComponent implements OnInit {
           this.equipeNom2 = this.currentPartie.participants[2].nom + ' ' + this.currentPartie.participants[3].nom;
         }
       }
-
-
-      this.gestionCamera();
     });
 
     this.socket.on("onNewContrat", (infoPartie: InfoPartie) => {
@@ -907,6 +923,31 @@ export class AppComponent implements OnInit {
       this.encherePosition = this.positionPartance;
       this.isEnchereVisible = !this.isSansEnchere;
       this.bestEnchereId = 0;
+    });
+
+    this.socket.on("onResetMene", (infoPartie: InfoPartie) => {
+      this.currentPartie = infoPartie.partie;
+      this.currentContrat = infoPartie.contrat;
+
+      if (this.currentMenes.length >= this.currentContrat.menes.length)
+        this.currentMenes.splice(-1, 1);
+
+      UtilsHelper.sleep(0).then(() => {
+        //Suppression de toutes les cartes
+        this.currentCards.splice(0, this.currentCards.length);
+        this.currentCards2.splice(0, this.currentCards2.length);
+        this.currentCards3.splice(0, this.currentCards3.length);
+        this.currentCards4.splice(0, this.currentCards4.length);
+        //Rafraichissement des cartes
+        this.refreshDeck();
+      });
+
+      this.positionneJoueur();
+
+      if (this.currentContrat.menes.length > 1)
+        this.fillLastMeneInfo(this.currentContrat.menes[this.currentContrat.menes.length - 2]);
+      else
+        this.lastMeneInfo = [new LastMeneInfo(), new LastMeneInfo(), new LastMeneInfo(), new LastMeneInfo()];
     });
 
     this.socket.on("onValidatePartance", (infoPartie: InfoPartie) => {
@@ -1010,297 +1051,4 @@ export class AppComponent implements OnInit {
       }
     })
   }
-
-  private gestionCamera() {
-    return;
-    var config:any = {
-      openSocket: function (config:any) {
-        var SIGNALING_SERVER = "https://socketio-over-nodejs2.herokuapp.com:443/", // environment.socketIoUrl,
-          defaultChannel = 'partie1'; //location.href.replace(/\/|:|#|%|\.|\[|\]/g, '');
-
-        var channel = config.channel || defaultChannel;
-        var sender = Math.round(Math.random() * 999999999) + 999999999;
-        console.log(SIGNALING_SERVER + channel);
-        io.connect(SIGNALING_SERVER).emit('new-channel', {
-          channel: channel,
-          sender: sender
-        });
-
-        var socket = io.connect(SIGNALING_SERVER + channel);
-        socket.channel = channel;
-        socket.on('connect', function () {
-          if (config.callback) config.callback(socket);
-        });
-
-        socket.send = function (message) {
-          socket.emit('message', {
-            sender: sender,
-            data: message
-          });
-        };
-
-        socket.on('message', config.onmessage);
-      },
-      onRemoteStream: function (media) {
-        var video = media.video;
-        video.setAttribute('id', media.stream.id);
-        videosContainer.appendChild(video);
-      },
-      onRemoteStreamEnded: function (stream) {
-        var video = document.getElementById(stream.id);
-        if (video) video.parentNode.removeChild(video);
-      },
-      onRoomFound: function (room) {
-        var alreadyExist = document.querySelector('button[data-broadcaster="' + room.broadcaster + '"]');
-        if (alreadyExist) return;
-
-        var tr = document.createElement('tr');
-        tr.innerHTML = '<td><strong>' + room.roomName + '</strong> shared a conferencing room with you!</td>' +
-          '<td><button class="join">Join</button></td>';
-        roomsList.appendChild(tr);
-
-        var joinRoomButton:any = tr.querySelector('.join');
-        joinRoomButton.setAttribute('data-broadcaster', room.broadcaster);
-        joinRoomButton.setAttribute('data-roomToken', room.broadcaster);
-        joinRoomButton.onclick = function () {
-          this.disabled = true;
-
-          var broadcaster = this.getAttribute('data-broadcaster');
-          var roomToken = this.getAttribute('data-roomToken');
-          captureUserMedia(function () {
-            conferenceUI.joinRoom({
-              roomToken: roomToken,
-              joinUser: broadcaster
-            });
-          });
-        };
-      }
-    };
-
-    var conferenceUI = conference(config);
-    var videosContainer = document.getElementById('videos-container') || document.body;
-    var roomsList = document.getElementById('rooms-list');
-
-    document.getElementById('setup-new-room').onclick = function () {
-      captureUserMedia(function () {
-        conferenceUI.createRoom({
-          roomName: 'Anonymous'
-        });
-      });
-    };
-
-    function captureUserMedia(success_callback:any) {
-      var video = document.createElement('video');
-      video.muted = true;
-      video.volume = 0;
-
-      video.setAttributeNode(document.createAttribute('autoplay'));
-      video.setAttributeNode(document.createAttribute('playsinline'));
-      video.setAttributeNode(document.createAttribute('controls'));
-
-      getUserMedia({
-        video: video,
-        onsuccess: function (stream) {
-          config.attachStream = stream;
-          videosContainer.appendChild(video);
-          success_callback();
-        }
-      });
-    }
-  }
-
-
-  private gestionCamera2() {
-    var partieId = this.partieId;
-    var currentId = this.currentId;
-    var config: any = {
-      // via: https://github.com/muaz-khan/WebRTC-Experiment/tree/master/socketio-over-nodejs
-      openSocket: function (config) {
-        var SIGNALING_SERVER = "https://socketio-over-nodejs2.herokuapp.com:443/"; //environment.socketIoUrl;
-
-        config.channel = config.channel || 'partie' + partieId;
-        var sender = Math.round(Math.random() * 999999999) + 999999999;
-
-        io.connect(SIGNALING_SERVER).emit('new-channel', {
-          channel: config.channel,
-          sender: sender
-        });
-
-        var socket = io.connect(SIGNALING_SERVER + config.channel);
-        socket.channel = config.channel;
-        socket.on('connect', function () {
-          if (config.callback) config.callback(socket);
-        });
-
-        socket.send = function (message) {
-          socket.emit('message', {
-            sender: sender,
-            data: message
-          });
-        };
-
-        socket.on('message', config.onmessage);
-      },
-      onRemoteStream: function (media) {
-        var mediaElement = getMediaElement(media.video, {
-          width: videosContainer1.clientWidth,
-          buttons: ['mute-audio', 'mute-video', 'full-screen', 'volume-slider']
-        });
-        mediaElement.id = media.stream.streamid;
-        if (currentId == 1 && videosContainer2.children.length == 0)
-          videosContainer2.appendChild(mediaElement);
-        if (currentId == 2 && videosContainer1.children.length == 0)
-          videosContainer1.appendChild(mediaElement);
-      },
-      onRemoteStreamEnded: function (stream, video) {
-        if (video.parentNode && video.parentNode.parentNode && video.parentNode.parentNode.parentNode) {
-          video.parentNode.parentNode.parentNode.removeChild(video.parentNode.parentNode);
-        }
-      },
-      onRoomFound: function (room) {
-        var alreadyExist = document.querySelector('button[data-broadcaster="' + room.broadcaster + '"]');
-        if (alreadyExist) return;
-
-        captureUserMedia(function () {
-          conferenceUI.joinRoom({
-            roomToken: room.roomToken,
-            joinUser: room.broadcaster
-          });
-        }, function () {
-        });
-      },
-      onRoomClosed: function (room) {
-        var joinButton = document.querySelector('button[data-roomToken="' + room.roomToken + '"]');
-        if (joinButton) {
-          // joinButton.parentNode === <li>
-          // joinButton.parentNode.parentNode === <td>
-          // joinButton.parentNode.parentNode.parentNode === <tr>
-          // joinButton.parentNode.parentNode.parentNode.parentNode === <table>
-          joinButton.parentNode.parentNode.parentNode.parentNode.removeChild(joinButton.parentNode.parentNode.parentNode);
-        }
-      },
-      onReady: function () {
-        console.log('now you can open or join rooms');
-      }
-    };
-
-    function captureUserMedia(callback, failure_callback) {
-      var video = document.createElement('video');
-      video.muted = true;
-      video.volume = 0;
-
-      try {
-        video.setAttributeNode(document.createAttribute('autoplay'));
-        video.setAttributeNode(document.createAttribute('playsinline'));
-        video.setAttributeNode(document.createAttribute('controls'));
-      } catch (e) {
-        video.setAttribute('autoplay', 'true');
-        video.setAttribute('playsinline', 'true');
-        video.setAttribute('controls', 'true');
-      }
-
-      getUserMedia({
-        video: video,
-        onsuccess: function (stream) {
-          config.attachStream = stream;
-
-          var mediaElement = getMediaElement(video, {
-            width: videosContainer1.clientWidth,
-            buttons: ['mute-audio', 'mute-video', 'full-screen', 'volume-slider']
-          });
-          mediaElement.toggle('mute-audio');
-
-          if (currentId == 1 && videosContainer1.children.length == 0)
-            videosContainer1.appendChild(mediaElement);
-          if (currentId == 2 && videosContainer2.children.length == 0)
-            videosContainer2.appendChild(mediaElement);
-
-          callback && callback();
-        },
-        onerror: function () {
-          alert('unable to get access to your webcam');
-          callback && callback();
-        }
-      });
-    }
-
-    var conferenceUI: any = conference(config);
-
-    /* UI specific */
-    var videosContainer1 = document.getElementById('videos-container1');
-    var videosContainer2 = document.getElementById('videos-container2');
-
-    if (this.isAdmin) {
-      captureUserMedia(function () {
-        conferenceUI.createRoom({
-          roomName: 'partie' + partieId
-        });
-      }, function () {
-      });
-    }
-    else {
-      //captureUserMedia(function () {
-      //  conferenceUI.joinRoom({
-      //    roomToken: roomToken,
-      //    joinUser: broadcaster
-      //  });
-      //}, function () {
-      //});
-    }
-
-
-  /*  captureUserMedia(function () {
-      conferenceUI.joinRoom({
-        roomToken: "84738ad6-d7a7-d9d9-d0ae-5ea125021306",
-        joinUser: "d633f51f-e340-71b-1abb-1e6383d4ca9a"
-      });
-    }, function () {
-    });*/
-
-
-    (function () {
-      var uniqueToken = document.getElementById('unique-token');
-      /*  if (uniqueToken)
-          if (location.hash.length > 2) uniqueToken.parentNode.parentNode.parentNode.innerHTML = '<h2 style="text-align:center;display: block;"><a href="' + location.href + '" target="_blank">Right click to copy & share this private link</a></h2>';
-          else uniqueToken.innerHTML = uniqueToken.parentNode.parentNode.href = '#' + (Math.random() * new Date().getTime()).toString(36).toUpperCase().replace(/\./g, '-');
-  */
-    })();
-
-    function scaleVideos() {
-      var videos = document.querySelectorAll('video'),
-        length = videos.length, video;
-
-      var minus = 130;
-      var windowHeight = 700;
-      var windowWidth = 600;
-      var windowAspectRatio = windowWidth / windowHeight;
-      var videoAspectRatio = 4 / 3;
-      var blockAspectRatio;
-      var tempVideoWidth = 0;
-      var maxVideoWidth = 0;
-
-      for (var i = length; i > 0; i--) {
-        blockAspectRatio = i * videoAspectRatio / Math.ceil(length / i);
-        if (blockAspectRatio <= windowAspectRatio) {
-          tempVideoWidth = videoAspectRatio * windowHeight / Math.ceil(length / i);
-        } else {
-          tempVideoWidth = windowWidth / i;
-        }
-        if (tempVideoWidth > maxVideoWidth)
-          maxVideoWidth = tempVideoWidth;
-      }
-      for (var i = 0; i < length; i++) {
-        video = videos[i];
-        if (video)
-          video.width = maxVideoWidth - minus;
-      }
-    }
-
-    window.onresize = scaleVideos;
-  }
-
-
-
-
-
 }
