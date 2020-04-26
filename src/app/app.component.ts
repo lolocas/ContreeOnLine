@@ -261,11 +261,11 @@ export class AppComponent implements OnInit {
     this.posDepart.posY = '';
     switch (this.positionJoueur) {
       case "sud":
-        this.posDepart.posX = "calc(50% - 164px)";
+        this.posDepart.posX = "calc(50% - 64px)";
         this.posDepart.posY = (window.innerHeight * 0.75) - 150 + 'px';
         break;
       case "nord":
-        this.posDepart.posX = "calc(50% - 164px)";
+        this.posDepart.posX = "calc(50% - 64px)";
         this.posDepart.posY = (window.innerHeight * 0.25) + 'px';
         break;
       case "ouest":
@@ -603,8 +603,9 @@ export class AppComponent implements OnInit {
         relativeTo: this.activatedRoute,
         queryParams: queryParams,
         queryParamsHandling: 'merge', // remove to replace all query params by provided
-      });
-    // window.location.reload();
+      }).then(function () {
+        window.location.reload();
+      })
   }
 
 
@@ -802,7 +803,7 @@ export class AppComponent implements OnInit {
         this.cardList.toArray().find(item => item.value == lastCard.value).elRef.nativeElement.opacity = '1';
 
       clearInterval(this.interval);
-      this.counter = 59;
+      this.counter = 60;
       var formModel = this;
       this.interval = setInterval(function () {
         if (formModel.counter == 0)
@@ -929,8 +930,11 @@ export class AppComponent implements OnInit {
       this.currentPartie = infoPartie.partie;
       this.currentContrat = infoPartie.contrat;
 
-      if (this.currentMenes.length >= this.currentContrat.menes.length)
+      if (this.currentMenes.length >= this.currentContrat.menes.length) {
+        if (this.currentMenes.length == 9)
+          this.currentMenes.splice(-1, 1); //On enlève le 10 de der
         this.currentMenes.splice(-1, 1);
+      }
 
       UtilsHelper.sleep(0).then(() => {
         //Suppression de toutes les cartes

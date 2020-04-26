@@ -124,7 +124,7 @@ input:focus {
 /* IMAGE STYLES */
   [type=radio] + img {
     cursor: pointer;
-    outline: 1px solid #808080;
+    outline: 1px solid white;
   }
 /* CHECKED STYLES */
   [type=radio]:checked + img {
