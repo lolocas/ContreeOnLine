@@ -1,4 +1,4 @@
-import { Component, ViewChild, ViewChildren, ElementRef, OnInit, QueryList, ViewContainerRef, Input, Output } from '@angular/core';
+import { Component, ViewChildren, OnInit, QueryList, HostListener, Input, Output } from '@angular/core';
 import { Router, ActivatedRoute, Params } from '@angular/router';
 import io from "socket.io-client";
 import { CardComponent } from './card/card.component';
@@ -84,6 +84,9 @@ export class AppComponent implements OnInit {
   @Output()
   public hasSpectateur: boolean;
   @Output()
+  public listeSpectateurs: Participant[] = [];
+
+  @Output()
   public counter: number = 59;
   private interval: any;
 
@@ -101,7 +104,11 @@ export class AppComponent implements OnInit {
   public nom2: string;
   public nom3: string;
   public nom4: string;
-  public ListeSpectateur: string[] = [];
+  private currentAvatar: string;
+  public avatar1: string;
+  public avatar2: string;
+  public avatar3: string;
+  public avatar4: string;
 
   public equipeNom1: string;
   public equipeNom2: string;
@@ -173,6 +180,12 @@ export class AppComponent implements OnInit {
       if (this.partieId > 0)
         this.socket.emit('joinRoom', this.partieId);
     })
+  }
+
+  @HostListener('window:beforeunload', ['$event'])
+  beforeUnloadHandler() {
+    if (this.isSpectateur)
+      this.socket.emit('removeNom', { id: this.currentParticipant.id, partieId: this.partieId });
   }
 
   public positionneJoueur() {
@@ -493,8 +506,9 @@ export class AppComponent implements OnInit {
       alert("Veuillez renseigner un nom");
       return;
     }
+    this.currentAvatar = this.createAvatar(this.currentNom);
 
-    this.socket.emit("creerPartie", { nom: this.currentNom, isAdmin : true });
+    this.socket.emit("creerPartie", { nom: this.currentNom, isAdmin: true, avatar: this.currentAvatar });
   }
 
   public onJoinPartie() {
@@ -504,7 +518,10 @@ export class AppComponent implements OnInit {
     }
     this.hasPartieId = true;
     this.partieId = this.selectPartieId;
-    this.socket.emit('addNom', { nom: this.currentNom, isAdmin: false, partieId: this.partieId });
+
+    this.currentAvatar = this.createAvatar(this.currentNom);
+
+    this.socket.emit('addNom', { nom: this.currentNom, isAdmin: false, partieId: this.partieId, avatar: this.currentAvatar });
     this.navigate();
   }
 
@@ -615,6 +632,42 @@ export class AppComponent implements OnInit {
     this.lastMeneInfo[1] = new LastMeneInfo(1, lastMene, this.currentContrat.playerId, this.currentPartie.participants);
     this.lastMeneInfo[2] = new LastMeneInfo(2, lastMene, this.currentContrat.playerId, this.currentPartie.participants);
     this.lastMeneInfo[3] = new LastMeneInfo(3, lastMene, this.currentContrat.playerId, this.currentPartie.participants);
+  }
+
+  private createAvatar(currentNom: string): string {
+    switch (currentNom.toLowerCase().replace(/[^A-Z\d\s]/gi, '')) {
+      case "lolo":
+        return "Lolo";
+      case "vincent":
+      case "vinz":
+        return "Vincent";
+      case "bruno":
+        return "Bruno";
+      case "stoch":
+      case "didier":
+        return "Didier";
+      case "eric":
+      case "rikkey":
+      case "rikket":
+        return "Eric";
+      case "thieu":
+      case "mathieu":
+        return "Thieu";
+      case "guy":
+      case "guytou":
+      case "guitou":
+        return "Guy";
+      case "franck":
+      case "dudu":
+        return "Dudu";
+      case "olivier":
+      case "oliv":
+        return "Olivier";
+      case "pierre":
+      case "pierrot":
+        return "Pierre";
+    }
+    return "Anonyme";
   }
 
   public ngAfterViewInit() {
@@ -826,6 +879,8 @@ export class AppComponent implements OnInit {
       if (this.currentParticipant) {
         this.currentCards = this.currentContrat.cards[this.currentParticipant.id - 1];
         this.currentId = this.currentParticipant.id;
+        if (!this.currentParticipant.isSpectateur)
+          this.avatar1 = this.currentParticipant.avatar;
       }
       this.positionneJoueur();
 
@@ -860,7 +915,7 @@ export class AppComponent implements OnInit {
             break;
         }
         //Spectateur
-        if (this.currentParticipant.id > 4) {
+        if (this.currentParticipant.isSpectateur) {
           this.currentCards = this.currentContrat.cards[0];
           index2 = 1;
           index3 = 2;
@@ -868,29 +923,35 @@ export class AppComponent implements OnInit {
           this.isCardVisible = true;
           this.isSpectateur = true;
           this.nom1 = this.currentPartie.participants[0].nom;
+          this.avatar1 = this.currentPartie.participants[0].avatar;
         }
-        else if (this.currentPartie.participants[this.currentPartie.participants.length - 1].isSpectateur) {
+        this.listeSpectateurs = [];
+        if (this.currentPartie.participants.length > 4) {
           this.hasSpectateur = true;
-          var nomSpectateur = this.currentPartie.participants[this.currentPartie.participants.length - 1].nom;
-          if (this.ListeSpectateur.indexOf(nomSpectateur) < 0) {
-            this.ListeSpectateur.push(nomSpectateur);
-            alert("Le spectateur " + this.currentPartie.participants[this.currentPartie.participants.length - 1].nom + " se connecte");
+          for (var l_intSpectateur = 4; l_intSpectateur < this.currentPartie.participants.length; l_intSpectateur++) {
+            var participantSpectateur = this.currentPartie.participants[l_intSpectateur];
+            if (!this.listeSpectateurs.find(spectateur => spectateur.nom == participantSpectateur.nom)) {
+              this.listeSpectateurs.push(participantSpectateur);
+            }
           }
         }
         if (this.currentPartie.participants.length > index2) {
           this.currentCards2 = this.currentContrat.cards[index2];
           this.nom2 = this.currentPartie.participants[index2].nom;
           this.id2 = this.currentPartie.participants[index2].id;
+          this.avatar2 = this.currentPartie.participants[index2].avatar;
         }
         if (this.currentPartie.participants.length > index3) {
           this.currentCards3 = this.currentContrat.cards[index3];
           this.nom3 = this.currentPartie.participants[index3].nom;
           this.id3 = this.currentPartie.participants[index3].id;
+          this.avatar3 = this.currentPartie.participants[index3].avatar;
         }
         if (this.currentPartie.participants.length > index4) {
           this.currentCards4 = this.currentContrat.cards[index4];
           this.nom4 = this.currentPartie.participants[index4].nom;
           this.id4 = this.currentPartie.participants[index4].id;
+          this.avatar4 = this.currentPartie.participants[index4].avatar;
         }
         if (this.currentPartie.participants.length >= 4) {
           this.equipeNom1 = this.currentPartie.participants[0].nom + ' ' + this.currentPartie.participants[1].nom;

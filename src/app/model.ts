@@ -15,6 +15,7 @@ export class Participant {
   public isAdmin: boolean; //Est t'il administrateur
   public isSpectateur: boolean; //Est t'il spectateur
   public id: number; //Identifiant
+  public avatar: string; //L'avatar
   public cards: Array<string>; //Les cartes du participant
 }
 

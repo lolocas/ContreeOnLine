@@ -11,10 +11,7 @@ Http.listen(PORT, () => {
 var listePartie = [];
 var nbTour = 4; //4
 var cards = ['7H', '7S', '7D', '7C', '8H', '8S', '8D', '8C', '9H', '9S', '9D', '9C', '0C', '0H', '0S', '0D', 'JH', 'JS', 'JD', 'JC', 'QH', 'QS', 'QD', 'QC', 'KH', 'KS', 'KD', 'KC', 'AC', 'AH', 'AS', 'AD'];
-
-
 var channels = {};
-
 
 Socketio.on("connection", socket => {
   socket.on('joinRoom', function (room) {
@@ -28,6 +25,17 @@ Socketio.on("connection", socket => {
       addNom(currentPartie, nomInfo);
       Socketio.in(nomInfo.partieId).emit("onAddNom", getInfoPartie(currentPartie));
     }
+  });
+
+  socket.on("removeNom", nomInfo => {
+    var currentPartie = getCurrentPartie(nomInfo.partieId);
+    if (!currentPartie)
+      return;
+    var currentIndexParticipant = currentPartie.participants.findIndex(item => item.id == nomInfo.id);
+    if (currentIndexParticipant > -1)
+      currentPartie.participants.splice(currentIndexParticipant, 1);
+    console.log("removeNom", currentIndexParticipant, "id", nomInfo.id);
+    Socketio.in(nomInfo.partieId).emit("onAddNom", getInfoPartie(currentPartie));
   });
 
   socket.on("creerPartie", nomInfo => {
@@ -286,7 +294,8 @@ function addNom(currentPartie, nomInfo) {
     var participant = {
       nom: nomInfo.nom,
       id: currentPartie.participants.length + 1,
-      isAdmin: nomInfo.isAdmin
+      isAdmin: nomInfo.isAdmin,
+      avatar: nomInfo.avatar
     }
     if (currentPartie.participants.length <= 3) {
       currentPartie.participants.push(participant);
