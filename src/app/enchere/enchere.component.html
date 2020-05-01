@@ -3,7 +3,7 @@
      *ngIf="encherePosition">
   <div>
     <label style="font-weight:bold">Enchère:</label>
-    <input type="number" [min]="minEnchere" max="160" step="10" [(ngModel)]="enchere" [disabled]="encherePosition!='sud'" />
+    <input type="number" [min]="minEnchere" max="990" step="10" [(ngModel)]="enchere" [disabled]="encherePosition!='sud'" />
     <div style="display:inline;margin-left:5px">00:{{counter}}</div>
   </div>
   <label>

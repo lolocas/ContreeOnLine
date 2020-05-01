@@ -87,7 +87,7 @@ input:focus {
 .counter {
   z-index: 1;
   position: absolute;
-
+  font-weight:bold;
 }
 
   .counter.sud {

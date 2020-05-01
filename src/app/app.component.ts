@@ -104,7 +104,6 @@ export class AppComponent implements OnInit {
   public nom2: string;
   public nom3: string;
   public nom4: string;
-  private currentAvatar: string;
   public avatar1: string;
   public avatar2: string;
   public avatar3: string;
@@ -467,7 +466,9 @@ export class AppComponent implements OnInit {
       this.nom3 = '';
       this.nom4 = '';
       this.partanceId = 1;
-      this.socket.emit("resetCurrentPartie", { nom: this.currentNom, isAdmin: this.isAdmin, partieId: this.partieId });
+      var currentAvatar = this.createAvatar(this.currentNom);
+
+      this.socket.emit("resetCurrentPartie", { nom: this.currentNom, isAdmin: this.isAdmin, avatar: currentAvatar, partieId: this.partieId });
     }
   }
 
@@ -506,9 +507,9 @@ export class AppComponent implements OnInit {
       alert("Veuillez renseigner un nom");
       return;
     }
-    this.currentAvatar = this.createAvatar(this.currentNom);
+   var currentAvatar = this.createAvatar(this.currentNom);
 
-    this.socket.emit("creerPartie", { nom: this.currentNom, isAdmin: true, avatar: this.currentAvatar });
+    this.socket.emit("creerPartie", { nom: this.currentNom, isAdmin: true, avatar: currentAvatar });
   }
 
   public onJoinPartie() {
@@ -519,9 +520,9 @@ export class AppComponent implements OnInit {
     this.hasPartieId = true;
     this.partieId = this.selectPartieId;
 
-    this.currentAvatar = this.createAvatar(this.currentNom);
+    var currentAvatar = this.createAvatar(this.currentNom);
 
-    this.socket.emit('addNom', { nom: this.currentNom, isAdmin: false, partieId: this.partieId, avatar: this.currentAvatar });
+    this.socket.emit('addNom', { nom: this.currentNom, isAdmin: false, partieId: this.partieId, avatar: currentAvatar });
     this.navigate();
   }
 
@@ -881,6 +882,15 @@ export class AppComponent implements OnInit {
         this.currentId = this.currentParticipant.id;
         if (!this.currentParticipant.isSpectateur)
           this.avatar1 = this.currentParticipant.avatar;
+
+        var enchere = 0;
+        var couleur = "";
+        if (this.currentContrat.value) {
+          var enchere = Number(this.currentContrat.value.substr(0, this.currentContrat.value.length - 1));
+          var couleur = this.currentContrat.value[this.currentContrat.value.length - 1];
+        }
+
+        this.positionnePartance(this.currentParticipant.id, this.currentContrat.partanceId, enchere, couleur);
       }
       this.positionneJoueur();
 
@@ -958,6 +968,10 @@ export class AppComponent implements OnInit {
           this.equipeNom2 = this.currentPartie.participants[2].nom + ' ' + this.currentPartie.participants[3].nom;
         }
       }
+    });
+
+    this.socket.on("onResetPartie", () => {
+      this.navigate();
     });
 
     this.socket.on("onNewContrat", (infoPartie: InfoPartie) => {

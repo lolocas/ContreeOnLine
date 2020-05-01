@@ -48,8 +48,7 @@
     <div [class]="'counter ' + positionJoueur">00:{{counter}}</div>
     <img src="../assets/sontour.png" class="sontour-{{positionJoueur}}" />
   </div>
-  <div style="position: fixed;left:{{partance.posX
-      }}px;top:{{partance.posY}}px;">
+  <div style="position: fixed;left:{{partance.posX}}px;top:{{partance.posY}}px;">
     <div class="infoSurImage" style="bottom:30px;right:30px;">{{partance.value}}</div>
     <img src="../assets/dealer.png" style="width: 150px" />
     <img src="../assets/{{partance.couleur}}.png" style="position: absolute;left: 25px;top: 25px;" *ngIf="partance.couleur" />
@@ -63,7 +62,7 @@
       <app-card *ngFor="let card of currentCards2; index as iCard" [value]=card [id]="id2" display="card-normal" [isInvisible]="!isCardVisible" [partieId]="partieId"
                 [ngStyle]="rotationCard(iCard, 'nord')"></app-card>
     </div>
-    <img *ngIf="avatar2" src="../assets/avatar/{{avatar2}}.png" style="width: 100px;
+    <img *ngIf="avatar2 && avatar2 != 'Anonyme'" src="../assets/avatar/{{avatar2}}.png" style="width: 100px;
     position: fixed;left: calc(50% - 50px);top: 105px;" />
     <div style="margin-top:20px;position:absolute;left: calc(50% - 50px);" [class]="classEquipe1 + ' ' + (id2 == bestEnchereId ? ' enchereIdColor' : '')">{{nom2}}</div>
   </div>
@@ -74,12 +73,12 @@
     </div>
   </div>
   <div style="top: 0;left: 150px;bottom: 0;position: fixed;">
-    <img *ngIf="avatar3" src="../assets/avatar/{{avatar3}}.png" style="width: 100px;position: fixed;top: calc(50% - 100px)" />
+    <img *ngIf="avatar3 && avatar3 != 'Anonyme'" src="../assets/avatar/{{avatar3}}.png" style="width: 100px;position: fixed;top: calc(50% - 100px)" />
     <div style="position: relative;top: 50%;transform: translateY(-50%);" [class]="classEquipe2 + ' ' + (id3 == bestEnchereId ? ' enchereIdColor' : '')">{{nom3}}</div>
   </div>
 
   <div style="top: 0;right: 160px;bottom: 0;position: fixed;">
-    <img *ngIf="avatar4" src="../assets/avatar/{{avatar4}}.png" style="width: 100px;position: fixed;top: calc(50% - 100px)" />
+    <img *ngIf="avatar4 && avatar4 != 'Anonyme'" src="../assets/avatar/{{avatar4}}.png" style="width: 100px;position: fixed;top: calc(50% - 100px)" />
     <div style="position: relative;top: 50%;transform: translateY(-50%);" [class]="classEquipe2 + ' ' + (id4 == bestEnchereId ? ' enchereIdColor' : '')">{{nom4}}</div>
   </div>
   <div style="top: 0;right: 0;bottom: 0;position: fixed;">
@@ -90,7 +89,7 @@
   </div>
 
   <div style="position: fixed;right: 0;bottom: 0;left: 0px;">
-    <img *ngIf="avatar1" src="../assets/avatar/{{avatar1}}.png" style="width: 100px;left:calc(50% - 50px);position:relative;top:-20px;" />
+    <img *ngIf="avatar1 && avatar1 != 'Anonyme'" src="../assets/avatar/{{avatar1}}.png" style="width: 100px;left:calc(50% - 50px);position:relative;top:-20px;" />
     <div style="position:relative;left:calc(50% - 50px);top:-30px;" [class]="classEquipe1 + ' ' + (currentId == bestEnchereId ? ' enchereIdColor' : '')">
       {{nom1}}
       <img *ngIf="isConnected" src="../assets/connected.png" />
@@ -156,7 +155,7 @@
     <button style="margin-bottom:50px;" (click)="onNewContrat()" class="btn btn-success btn-lg btn-block">Nouveau contrat</button>
     <div>
       <label style="color:white;font-size:small;">Enchère:</label>
-      <input style="width:60px" type="number" min="80" max="160" step="10" [(ngModel)]="enchere" (change)="onValidateEnchere()" />
+      <input style="width:60px" type="number" min="80" max="990" step="10" [(ngModel)]="enchere" (change)="onValidateEnchere()" />
       <label style="color:white;font-size:x-small;">Sans enchère</label>
       <input type="checkbox" style="margin-left:5px" [(ngModel)]="isSansEnchere" (change)="onValidateSansEnchere()" />
     </div>

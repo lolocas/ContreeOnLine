@@ -27,7 +27,7 @@
   <script>
     var config = {
       openSocket: function (config) {
-        if (window.location.href.indexOf("admin") - 1) {
+        if (window.location.href.indexOf("admin") > - 1 && window.location.href.indexOf("webcam") > - 1) {
           var partieId = location.search.split('partieId=')[1];
           var SIGNALING_SERVER = 'https://socketio-over-nodejs2.herokuapp.com:443/',
             defaultChannel = 'partie' + partieId; //location.href.replace(/\/|:|#|%|\.|\[|\]/g, '');

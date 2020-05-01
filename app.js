@@ -208,7 +208,7 @@ Socketio.on("connection", socket => {
     TirageCarte(currentPartie.contrats[0]);
     console.log("resetCurrentPartie", listePartie);
     addNom(currentPartie, nomInfo);
-    Socketio.in(nomInfo.partieId).emit("onNewContrat", getInfoPartie(currentPartie));
+    Socketio.in(nomInfo.partieId).emit("onResetPartie");
   });
 
   socket.on("resetCurrentContrat", info => {
