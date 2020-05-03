@@ -45,7 +45,7 @@ Socketio.on("connection", socket => {
     }
     lastPartieId = lastPartieId + 1;
     var currentPartie = newPartie(lastPartieId);
-    TirageCarte(currentPartie.contrats[0]);
+    TirageCarte(currentPartie.contrats[0], cards);
 
     listePartie.push(currentPartie);
     addNom(currentPartie, nomInfo);
@@ -110,7 +110,13 @@ Socketio.on("connection", socket => {
     else
       currentContrat.playerId = nextPlayer(currentContrat.playerId);
 
+    if (currentContrat.menes[currentContrat.menes.length - 1].cards.some(item => item.value == value.value)) {
+      console.log("cardDropped", value.value + " existe");
+      return;
+    }
     currentContrat.menes[currentContrat.menes.length - 1].cards.push({ id: value.id, value: value.value });
+
+    console.log(currentContrat.menes[currentContrat.menes.length - 1].cards);
 
     //Nouvelle mène
     if (currentContrat.menes[currentContrat.menes.length - 1].cards.length == nbTour) {
@@ -205,7 +211,7 @@ Socketio.on("connection", socket => {
         total2: 0
       }]
     }];
-    TirageCarte(currentPartie.contrats[0]);
+    TirageCarte(currentPartie.contrats[0], cards);
     console.log("resetCurrentPartie", listePartie);
     addNom(currentPartie, nomInfo);
     Socketio.in(nomInfo.partieId).emit("onResetPartie");
@@ -261,7 +267,14 @@ Socketio.on("connection", socket => {
 
   socket.on("newContrat", info => {
     var currentPartie = getCurrentPartie(info.partieId);
-    var newPlayer = nextPlayer(currentPartie.contrats[currentPartie.contrats.length - 1].partanceId);
+    var currentContrat = currentPartie.contrats[currentPartie.contrats.length - 1];
+    var listCards = [];
+    listCards = listCards.concat(currentContrat.initCards[0]);
+    listCards = listCards.concat(currentContrat.initCards[1]);
+    listCards = listCards.concat(currentContrat.initCards[2]);
+    listCards = listCards.concat(currentContrat.initCards[3]);
+
+    var newPlayer = nextPlayer(currentContrat.partanceId);
 
     var newContrat = {
       partanceId: newPlayer,
@@ -277,7 +290,8 @@ Socketio.on("connection", socket => {
       }]
     };
 
-    TirageCarte(newContrat);
+
+    TirageCarte(newContrat, listCards);
 
     currentPartie.contrats.push(newContrat);
     Socketio.in(info.partieId).emit("onNewContrat", getInfoPartie(currentPartie));
@@ -432,8 +446,8 @@ function getCurrentPartie(partieId) {
   return listePartie.find(item => item.partieId == partieId);
 }
 
-function TirageCarte(newContrat) {
-  var sortedCards = cards.sort(function () { return 0.5 - Math.random() });
+function TirageCarte(newContrat, initCards) {
+  var sortedCards = initCards.sort(function () { return 0.5 - Math.random() });
   for (var numParticipant = 1; numParticipant <= 4; numParticipant++) {
     var newCards = SortCards(sortedCards.slice(0, 8));
     newContrat.initCards.push(newCards.slice(0));

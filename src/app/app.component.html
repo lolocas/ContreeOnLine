@@ -104,55 +104,54 @@
   <button style="right: 250px;bottom: 30px;position: fixed;" (click)="onAnnulerCarte()" class="btn btn-info" [disabled]="!canAnnulerCarte" *ngIf="!isEnchereVisible">Annuler la carte</button>
   <button style="right: 250px;bottom: 30px;position: fixed;" (click)="onAnnulerEnchere()" class="btn btn-info" [disabled]="!canAnnulerEnchere" *ngIf="isEnchereVisible">Annuler l'enchère</button>
 
-  <div style="position: fixed;right:210px;top:0px;z-index:10" *ngIf="hasSpectateur">
+  <div style="position: fixed;right:270px;top:0px;z-index:10" *ngIf="hasSpectateur">
     <img *ngFor="let spectateur of listeSpectateurs" src="../assets/avatar/{{spectateur.avatar}}.png" [title]="spectateur.nom" style="width: 100px;" />
   </div>
 
   <!-- Volet d'information -->
-  <div style="position:absolute;top: 0;right: 0;">
-    <div style="border: 2px solid grey; border-radius: 10px; box-shadow: -10px 10px 5px rgba(0,0,0,0.6); opacity: 0.8; font-size: small; margin: 5px;">
-      <div style="display: flex;">
-        <div style="width: 100px;background-color: lightskyblue;border-radius:10px 0 0 0;text-align:center;font-weight: bold;">Equipe 1</div>
-        <div style="width: 100px;background-color: lightgreen;border-radius:0 10px 0 0;text-align:center;font-weight: bold;">Equipe 2</div>
-      </div>
-      <div style="display: flex;border-bottom: gray 1px solid;">
-        <div style="width:100px;font-size:small;text-align:center;background-color: lightskyblue;">{{equipeNom1}}</div>
-        <div style="width:100px;font-size:small;text-align:center;background-color: lightgreen;">{{equipeNom2}}</div>
-      </div>
-      <div *ngFor="let mene of currentMenes" style="display:flex;">
-        <div style="width:100px;padding-left:1px;" [class]="mene.total1 > 0 ? 'equipe1':'equipe2'">{{mene.total1}}</div>
-        <div style="width:100px;padding-left:1px;" [class]="mene.total1 > 0 ? 'equipe1':'equipe2'">{{mene.total2}}</div>
-      </div>
-      <div style="display:flex;">
-        <div style="width:100px;background-color: lightskyblue;border-radius:0 0 0 10px;border-top: gray 1px solid;padding-left:1px;">Total: {{ getTotal1() }}</div>
-        <div style="width:100px;background-color: lightgreen;border-radius:0 0 10px 0;border-top: gray 1px solid;padding-left:1px;">Total: {{ getTotal2() }}</div>
-      </div>
-    </div>
-
-    <div style="    position: absolute;
-    right: 0;
+  <div style="position: absolute;
+    right: 165px;
     width: 100px;
     border: 2px solid grey;
     border-radius: 10px;
-    box-shadow: -10px 10px 5px rgba(0,0,0,0.6);
+    box-shadow: 0 10px 5px rgba(0,0,0,0.6);
     opacity: 0.8;
     font-size: small;
     margin: 5px;
     padding: 4px">
-      <div style="text-align:center;font-weight: bold;">Enchère</div>
-      <div *ngFor="let enchere of currentEncheres" [ngStyle]="{'background-color': (enchere.isPasse ? 'lightcoral' : (enchere.enchereId == 1 || enchere.enchereId ==2 ? 'lightskyblue' : 'lightgreen'))}">
-        <div style="display:flex">{{enchere.nom}}&nbsp;<div style="display:flex" *ngIf="enchere.isPasse">passe</div><div style="display:flex" *ngIf="enchere.enchere">{{enchere.enchere}}&nbsp;</div><img style="display:flex;height:20px" *ngIf="enchere.img" [src]="enchere.img" /></div>
+    <div style="text-align:center;font-weight: bold;">Enchère</div>
+    <div *ngFor="let enchere of currentEncheres" [ngStyle]="{'background-color': (enchere.isPasse ? 'lightcoral' : (enchere.enchereId == 1 || enchere.enchereId ==2 ? 'lightskyblue' : 'lightgreen'))}">
+      <div style="display:flex">{{enchere.nom}}&nbsp;<div style="display:flex" *ngIf="enchere.isPasse">passe</div><div style="display:flex" *ngIf="enchere.enchere">{{enchere.enchere}}&nbsp;</div><img style="display:flex;height:20px" *ngIf="enchere.img" [src]="enchere.img" /></div>
+    </div>
+  </div>
+  <div style="position:absolute;top: 0;right: 0;">
+    <div style="border: 2px solid grey; border-radius: 10px; box-shadow: 0 10px 5px rgba(0,0,0,0.6); opacity: 0.8; font-size: small; margin: 5px;">
+      <div style="display: flex;">
+        <div style="width: 80px;background-color: lightskyblue;border-radius:10px 0 0 0;text-align:center;font-weight: bold;">Equipe 1</div>
+        <div style="width: 80px;background-color: lightgreen;border-radius:0 10px 0 0;text-align:center;font-weight: bold;">Equipe 2</div>
+      </div>
+      <div style="display:flex;border-bottom: gray 1px solid;">
+        <div style="width:80px;font-size:small;text-align:center;background-color: lightskyblue;">{{equipeNom1}}</div>
+        <div style="width:80px;font-size:small;text-align:center;background-color: lightgreen;">{{equipeNom2}}</div>
+      </div>
+      <div *ngFor="let mene of currentMenes" style="display:flex;">
+        <div style="width:80px;padding-left:1px;" [class]="mene.total1 > 0 ? 'equipe1':'equipe2'">{{mene.total1}}</div>
+        <div style="width:80px;padding-left:1px;" [class]="mene.total1 > 0 ? 'equipe1':'equipe2'">{{mene.total2}}</div>
+      </div>
+      <div style="display:flex;">
+        <div style="width:80px;background-color: lightskyblue;border-radius:0 0 0 10px;border-top: gray 1px solid;padding-left:1px;">Total: {{ getTotal1() }}</div>
+        <div style="width:80px;background-color: lightgreen;border-radius:0 0 10px 0;border-top: gray 1px solid;padding-left:1px;">Total: {{ getTotal2() }}</div>
       </div>
     </div>
   </div>
 
   <!--Volet d'administration-->
   <div style="bottom:0;position:absolute;right:0;width:200px;background-color: rgba(0,0,0,0.2) !important;border-radius:10px;margin:5px;" *ngIf="isAdmin">
-    <div style="color:white;margin-left:5px;">Version 1.3.0</div>
     <button (click)="onResetPartie()" class="btn btn-danger btn-lg btn-block">Reset partie</button>
     <button (click)="onResetContrat()" class="btn btn-warning btn-lg btn-block">Reset contrat</button>
     <button (click)="onResetMene()" class="btn btn-primary btn-lg btn-block">Reset mène</button>
-    <button style="margin-bottom:50px;" (click)="onNewContrat()" class="btn btn-success btn-lg btn-block">Nouveau contrat</button>
+    <button (click)="onNewContrat()" class="btn btn-success btn-lg btn-block">Nouveau contrat</button>
+    <div style="color:white;margin-left:5px;margin-bottom:40px;">Version 1.3.1</div>
     <div>
       <label style="color:white;font-size:small;">Enchère:</label>
       <input style="width:60px" type="number" min="80" max="990" step="10" [(ngModel)]="enchere" (change)="onValidateEnchere()" />

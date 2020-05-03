@@ -999,6 +999,9 @@ export class AppComponent implements OnInit {
       this.encherePosition = this.positionPartance;
       this.isEnchereVisible = !this.isSansEnchere;
       this.bestEnchereId = 0;
+
+      this.counter = 59;
+      clearInterval(this.interval);
     });
 
     this.socket.on("onResetMene", (infoPartie: InfoPartie) => {
@@ -1046,6 +1049,7 @@ export class AppComponent implements OnInit {
       this.encherePosition = this.positionPartance;
       this.isEnchereVisible = !this.isSansEnchere;
       this.bestEnchereId = 0;
+      this.currentEncheres = [];
     });
 
     this.socket.on("onValidateSansEnchere", isSansEnchere => {

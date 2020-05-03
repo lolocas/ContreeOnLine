@@ -1,3 +1,3 @@
-rem ng build --prod
+ng build --prod
 firebase deploy
 pause
