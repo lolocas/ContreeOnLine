@@ -171,6 +171,14 @@ Socketio.on("connection", socket => {
     Socketio.in(infoSansEnchere.partieId).emit("onValidateSansEnchere", infoSansEnchere.isSansEnchere);
   });
 
+  socket.on("validateTotal", infoTotal => {
+    var currentPartie = getCurrentPartie(infoTotal.partieId);
+    currentPartie.total1 = infoTotal.total1;
+    currentPartie.total2 = infoTotal.total2;
+    console.log("validateTotal", infoTotal);
+    Socketio.in(infoTotal.partieId).emit("onValidateTotal", infoTotal);
+  });
+
   socket.on("annulerDerniereCarte", value => {
     var currentPartie = getCurrentPartie(value.partieId);
     console.log("annulerDerniereCarte", value);
@@ -424,6 +432,8 @@ function newPartie(partieId) {
     departId: 0,
     datePartie : new Date(),
     nbTour: nbTour,
+    total1: 0,
+    total2: 0,
     participants: [],
     contrats: [{
       partanceId: 1,
@@ -463,6 +473,8 @@ function getInfoPartie(currentPartie) {
       departId: currentPartie.departId,
       datePartie: currentPartie.datePartie,
       nbTour: currentPartie.nbTour,
+      total1: currentPartie.total1,
+      total2 :currentPartie.total2,
       participants: currentPartie.participants
     },
     contrat: currentPartie.contrats[currentPartie.contrats.length - 1]

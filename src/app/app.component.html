@@ -139,8 +139,12 @@
         <div style="width:80px;padding-left:1px;" [class]="mene.total1 > 0 ? 'equipe1':'equipe2'">{{mene.total2}}</div>
       </div>
       <div style="display:flex;">
-        <div style="width:80px;background-color: lightskyblue;border-radius:0 0 0 10px;border-top: gray 1px solid;padding-left:1px;">Total: {{ getTotal1() }}</div>
-        <div style="width:80px;background-color: lightgreen;border-radius:0 0 10px 0;border-top: gray 1px solid;padding-left:1px;">Total: {{ getTotal2() }}</div>
+        <div style="width:80px;background-color: lightskyblue;border-top: gray 1px solid;padding-left:1px;">Total: {{ getTotal1() }}</div>
+        <div style="width:80px;background-color: lightgreen;border-top: gray 1px solid;padding-left:1px;">Total: {{ getTotal2() }}</div>
+      </div>
+      <div style="display:flex;">
+        <div style="width:80px;background-color: lightskyblue;border-radius:0 0 0 10px;border-top: gray 2px solid;padding-left:1px;font-weight:bold;font-size:medium;">Total: {{ totalGeneral1 }}</div>
+        <div style="width:80px;background-color: lightgreen;  border-radius:0 0 10px 0;border-top: gray 2px solid;padding-left:1px;font-weight:bold;font-size:medium;">Total: {{ totalGeneral2 }}</div>
       </div>
     </div>
   </div>
@@ -151,7 +155,12 @@
     <button (click)="onResetContrat()" class="btn btn-warning btn-lg btn-block">Reset contrat</button>
     <button (click)="onResetMene()" class="btn btn-primary btn-lg btn-block">Reset mène</button>
     <button (click)="onNewContrat()" class="btn btn-success btn-lg btn-block">Nouveau contrat</button>
-    <div style="color:white;margin-left:5px;margin-bottom:40px;">Version 1.3.1</div>
+    <div style="color:white;margin-left:5px;margin-bottom:30px;">Version 1.3.2</div>
+    <div>
+      <label style="color:white;font-size:small;">Total:</label>
+      <input style="width:60px" type="number" min="80" max="990" step="10" [(ngModel)]="totalGeneral1" (change)="onValidateTotal()" />
+      <input style="width:60px" type="number" min="80" max="990" step="10" [(ngModel)]="totalGeneral2" (change)="onValidateTotal()" />
+    </div>
     <div>
       <label style="color:white;font-size:small;">Enchère:</label>
       <input style="width:60px" type="number" min="80" max="990" step="10" [(ngModel)]="enchere" (change)="onValidateEnchere()" />

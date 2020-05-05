@@ -6,6 +6,8 @@ export class Partie {
   public datePartie: Date;
   public nbTour: number; //Nombre de tour de cartes (4)
   public isSansEnchere: boolean;
+  public total1: number; //Le total de l'équipe 1
+  public total2: number; //Le total de l'équipe 2
   public participants: Array<Participant>; //La liste des participants
   public contrats: Array<Contrat>; //La liste des contrats
 }

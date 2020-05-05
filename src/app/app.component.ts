@@ -51,6 +51,13 @@ export class AppComponent implements OnInit {
   public canPlayCard: boolean = true;
 
   @Input()
+  @Output()
+  public totalGeneral1: number;
+  @Input()
+  @Output()
+  public totalGeneral2: number;
+
+  @Input()
   public couleur: string;
   @Input()
   public partanceId: number;
@@ -502,6 +509,10 @@ export class AppComponent implements OnInit {
     this.socket.emit("validateSansEnchere", { isSansEnchere: this.isSansEnchere, partieId: this.partieId });
   }
 
+  public onValidateTotal() {
+    this.socket.emit("validateTotal", { total1:this.totalGeneral1, total2:this.totalGeneral2, partieId: this.partieId });
+  }
+
   public onCreerPartie() {
     if (!this.currentNom) {
       alert("Veuillez renseigner un nom");
@@ -875,6 +886,9 @@ export class AppComponent implements OnInit {
       this.currentPartie = infoPartie.partie;
       this.currentContrat = infoPartie.contrat;
 
+      this.totalGeneral1 = this.currentPartie.total1;
+      this.totalGeneral2 = this.currentPartie.total2;
+
       //Participant courant
       this.currentParticipant = this.currentPartie.participants.find(item => item.nom == this.currentNom);
       if (this.currentParticipant) {
@@ -1055,6 +1069,13 @@ export class AppComponent implements OnInit {
     this.socket.on("onValidateSansEnchere", isSansEnchere => {
       this.isSansEnchere = isSansEnchere;
       this.isEnchereVisible = !this.isSansEnchere;
+    });
+
+    this.socket.on("onValidateTotal", validateTotal => {
+      if (this.currentPartie) {
+        this.totalGeneral1 = validateTotal.total1;
+        this.totalGeneral2 = validateTotal.total2;
+      }
     });
 
     this.socket.on("onValidateEnchere", infoEnchere => {
