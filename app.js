@@ -455,6 +455,7 @@ function newPartie(partieId) {
       }]
     }]
   };
+
 }
 
 function getCurrentPartie(partieId) {
