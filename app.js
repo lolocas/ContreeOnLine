@@ -311,6 +311,7 @@ Socketio.on("connection", socket => {
   });
 
   socket.on("abattreJeux", info => {
+    console.log("abattreJeux", info.partieId);
     Socketio.in(info.partieId).emit("onAbattreJeux", info.abattre);
   });
 });
