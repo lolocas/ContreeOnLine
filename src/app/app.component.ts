@@ -65,6 +65,8 @@ export class AppComponent implements OnInit {
   public canAnnulerCarte: boolean;
   @Input()
   public isCardVisible: boolean;
+  @Input()
+  public isAbattreJeux: boolean = false;
 
   @Output()
   public socket: any;
@@ -481,18 +483,34 @@ export class AppComponent implements OnInit {
 
   public onResetContrat() {
     if (confirm('Confirmez-vous le reset du contrat ?')) {
+      this.isAbattreJeux = false;
       this.socket.emit("resetCurrentContrat", { partieId: this.partieId });
+    }
+  }
+
+  public onAbattre(abattre: boolean) {
+    if (abattre) {
+      if (confirm('Voulez-vous abattre tous les jeux ?')) {
+        this.socket.emit("abattreJeux", { partieId: this.partieId, abattre : abattre });
+      }
+    }
+    else {
+      if (confirm('Voulez-vous remettre tous les jeux ?')) {
+        this.socket.emit("abattreJeux", { partieId: this.partieId, abattre: abattre });
+      }
     }
   }
 
   public onResetMene() {
     if (confirm('Confirmez-vous le reset de la mène ?')) {
+      this.isAbattreJeux = false;
       this.socket.emit("resetMene", { partieId: this.partieId });
     }
   }
 
   public onNewContrat() {
     if (confirm('Confirmez-vous la création d\'un nouveau contrat ?')) {
+      this.isAbattreJeux = false;
       this.socket.emit("newContrat", { partieId: this.partieId });
     }
   }
@@ -1154,5 +1172,16 @@ export class AppComponent implements OnInit {
         cardToMove.setInVisible();
       }
     })
+
+    this.socket.on("onAbattreJeux", (abattre: boolean) => {
+      //Permet de montrer ou remettre les jeux
+      this.isAbattreJeux = abattre;
+      //On supprime les cartes des autres joueurs
+      this.currentCards2 = [];
+      this.currentCards3 = [];
+      this.currentCards4 = [];
+      //Et on rafraichit le tapis
+      this.refreshDeck();
+    });
   }
 }

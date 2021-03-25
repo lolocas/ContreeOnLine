@@ -309,6 +309,10 @@ Socketio.on("connection", socket => {
     channels[data.channel] = data.channel;
     onNewNamespace(data.channel, data.sender);
   });
+
+  socket.on("abattreJeux", info => {
+    Socketio.in(info.partieId).emit("onAbattreJeux", info.abattre);
+  });
 });
 
 function addNom(currentPartie, nomInfo) {
